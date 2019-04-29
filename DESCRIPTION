@@ -1,0 +1,9 @@
+Package: rucdr
+Version: 0.1
+Date: 2019-04-29
+Title: R ucdr pipeline
+Description: R ucdr pipeline.
+Author: Anthony Piron <anthony.piron@ulb.ac.be>
+Maintainer: Anthony Piron <anthony.piron@ulb.ac.be>
+Depends:
+   parallel
