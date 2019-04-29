@@ -25,16 +25,23 @@ loadGTF <- function (filename)
 newSamples <- function (sampleTable=
                             setNames(
                                 data.frame(matrix(ncol = 3, nrow = 0)),
-                                c("filename", "name", "condition")))
+                                c("filename", "name", "condition")),
+                        txdb)
 {
-    names(sample) <- sampleTable$name
+    names(sampleTable) <- sampleTable$name
     
     txi.isoforms <- tximport(sampleTable$filename,
                              type = "salmon", txOut = TRUE,
                              ignoreTxVersion=T)
+    k <- keys(txdb, keytype = "TXNAME")
+    tx2gene <- select(txdb, k, "GENEID", "TXNAME")
+
     s <-  structure(list(txdb=txdb,
                          samplesTable=sampleTable,
                          txi=txi.isoforms,
+                         isoforms=TRUE,
+                         tx2gene=tx2gene,
+                         dds=NULL
                          ),
                     class = "samples")
 
@@ -44,27 +51,44 @@ newSamples <- function (sampleTable=
 #' @param sample A list of samples as returned by newSamples()
 #' @param txdb A genomic database (gtf)
 #' @export
-summarizeSamples <- function(samples, txdb)
+summarizeSamples <- function(samples)
 {
-    k <- keys(txdb, keytype = "TXNAME")
-    tx2gene <- select(txdb, k, "GENEID", "TXNAME")
-
-    samples$txi  <- summarizeToGene(samples$txi, tx2gene,
+    samples$txi  <- summarizeToGene(samples$txi, samples$tx2gene,
                                     ignoreTxVersion=T)
-    
+    samples$isoforms=FALSE
+        
     return(samples)
 }
 
 #' @export
 differential.expression <- function (samples, design=~condition)
 {
-    dds <- DESeqDataSetFromTximport(samples$txi,
+    samples$dds <- DESeqDataSetFromTximport(samples$txi,
                                     samples$sampleTable,
                                     design)
-    ## filter too low expression
-    dds <- dds[ apply(counts(dds),1,function (x) sum(x > 5) > 4), ]
-    dds <- estimateSizeFactors(dds)
-    dds <- DESeq(dds, parallel=T)
+    ## filter too low expression (TODO: Adapt)
+    samples$dds <- dds[ apply(counts(dds), 1,
+                              function (x) sum(x > 5) > 4), ]
+    samples$dds <- estimateSizeFactors(dds)
+    samples$dds <- DESeq(dds, parallel=T)
     
-    return(dds)
+    return(samples)
+}
+
+
+
+
+#' @export
+condition.samples  <- function (samples, c1, c2)
+{
+    res <- results(samples$dds, contrast=c("condition", c1, c2))
+    if (samples$isoforms)
+        {
+            rownames(res)  <- sapply(strsplit(rownames(res),'\\.'),'[',1)
+            res <- merge(as.data.frame(res), samples$txtogene,
+                         by.x=0, by.y="TXNAME", all.x=T)
+            rownames(res) <- res$Row.names
+            res <- res[-1]
+        }
+    return (res)
 }
