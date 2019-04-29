@@ -7,3 +7,4 @@ Author: Anthony Piron <anthony.piron@ulb.ac.be>
 Maintainer: Anthony Piron <anthony.piron@ulb.ac.be>
 Depends:
    parallel
+RoxygenNote: 6.1.1
