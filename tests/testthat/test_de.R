@@ -64,6 +64,8 @@ test_that("differential.expression()", {
 
 res <- condition.samples(de, "ctl", "pal")
 test_that("differential.expression()", {
-    expect_s3_class(res, "samples")
+    expect_s3_class(res, "data.frame")
+    expect_true(res["ENST00000456328",]$padj < 0.01)
+    expect_true(all(res[transcripts[! ("ENST00000456328" == transcripts)],]$padj > 0.05))
 })
 

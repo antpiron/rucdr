@@ -85,7 +85,7 @@ condition.samples  <- function (samples, c1, c2)
     if (samples$isoforms)
         {
             rownames(res)  <- sapply(strsplit(rownames(res),'\\.'),'[',1)
-            res <- merge(as.data.frame(res), samples$txtogene,
+            res <- merge(as.data.frame(res), samples$tx2gene,
                          by.x=0, by.y="TXNAME", all.x=T)
             rownames(res) <- res$Row.names
             res <- res[-1]
