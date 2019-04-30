@@ -1,7 +1,8 @@
 
-library(tximport)
-library(GenomicFeatures)
-library(DESeq2)
+##library(tximport)
+##library(GenomicFeatures)
+##library(DESeq2)
+##library(AnnotationDbi)
 
 #' Load a gtf file into a tx handle. A cache is created to improve the loading
 #' time (cache name `filename`.sqlite).
@@ -12,11 +13,11 @@ loadGTF <- function (filename)
 {
     sqlite <- paste0(filename, ".sqlite")
     if (file.exists(sqlite))
-        txdb <- loadDb(sqlite)
+        txdb <- AnnotationDbi::loadDb(sqlite)
     else
     {
-        txdb <- makeTxDbFromGFF(filename)
-        saveDb(txdb,sqlite)
+        txdb <- GenomicFeatures::makeTxDbFromGFF(filename)
+        AnnotationDbi::saveDb(txdb,sqlite)
     }
 
     return(txdb)
@@ -30,11 +31,11 @@ newSamples <- function (sampleTable, txdb)
 {
     row.names(sampleTable) <- sampleTable$name
 
-    txi.isoforms <- tximport(as.character(sampleTable$filename),
-                             type = "salmon", txOut = TRUE,
-                             ignoreTxVersion=T)
-    k <- keys(txdb, keytype = "TXNAME")
-    tx2gene <- select(txdb, k, "GENEID", "TXNAME")
+    txi.isoforms <- tximport::tximport(as.character(sampleTable$filename),
+                                       type = "salmon", txOut = TRUE,
+                                       ignoreTxVersion=T)
+    k <- biomaRt::keys(txdb, keytype = "TXNAME")
+    tx2gene <- biomaRt::select(txdb, k, "GENEID", "TXNAME")
 
     s <-  structure(list(txdb=txdb,
                          samplesTable=sampleTable,
@@ -53,8 +54,9 @@ newSamples <- function (sampleTable, txdb)
 #' @export
 summarizeSamples <- function(samples)
 {
-    samples$txi  <- summarizeToGene(samples$txi, samples$tx2gene,
-                                    ignoreTxVersion=T)
+    samples$txi  <- tximport::summarizeToGene(samples$txi,
+                                              samples$tx2gene,
+                                              ignoreTxVersion=T)
     samples$isoforms=FALSE
         
     return(samples)
@@ -63,14 +65,14 @@ summarizeSamples <- function(samples)
 #' @export
 differential.expression <- function (samples, design=~condition)
 {
-    samples$dds <- DESeqDataSetFromTximport(samples$txi,
-                                    samples$sampleTable,
-                                    design)
+    samples$dds <- DESeq2::DESeqDataSetFromTximport(samples$txi,
+                                                    samples$sampleTable,
+                                                    design)
     ## filter too low expression (TODO: Adapt)
     samples$dds <- dds[ apply(counts(dds), 1,
                               function (x) sum(x > 5) > 4), ]
-    samples$dds <- estimateSizeFactors(dds)
-    samples$dds <- DESeq(dds, parallel=T)
+    samples$dds <- DESeq2::estimateSizeFactors(dds)
+    samples$dds <- DESeq2::DESeq(dds, parallel=T)
     
     return(samples)
 }
