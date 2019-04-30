@@ -20,7 +20,7 @@ test_that("txdb is a S4 txdb", {
     expect_true(test_select())
 })
 
-##set.seed(0)
+set.seed(1)
 nsamples <- 10
 sampleTable <- data.frame(filename=paste0("data/S",1:nsamples,
                                           ".quant.sf"),
