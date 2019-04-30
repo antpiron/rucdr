@@ -8,3 +8,5 @@ Maintainer: Anthony Piron <anthony.piron@ulb.ac.be>
 Depends:
    parallel
 RoxygenNote: 6.1.1
+Suggests: 
+    testthat

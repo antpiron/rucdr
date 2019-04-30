@@ -48,9 +48,22 @@ on.exit(sapply(as.character(sampleTable$filename),
 
 samples <- newSamples(sampleTable, txdb)
 
+##print(samples$txi)
+
 test_that("newSamples()", {
     expect_s3_class(samples, "samples")
     expect_true(all(samples$sampleTable$name == sampleTable$name))
+    expect_equal(dim(samples$txi$counts),
+                 c(length(transcripts), nrow(sampleTable)))
 })
 
+de <- differential.expression(samples)
+test_that("differential.expression()", {
+    expect_s3_class(de, "samples")
+})
+
+res <- condition.samples(de, "ctl", "pal")
+test_that("differential.expression()", {
+    expect_s3_class(res, "samples")
+})
 

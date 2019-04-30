@@ -38,7 +38,7 @@ newSamples <- function (sampleTable, txdb)
     tx2gene <- biomaRt::select(txdb, k, "GENEID", "TXNAME")
 
     s <-  structure(list(txdb=txdb,
-                         samplesTable=sampleTable,
+                         sampleTable=sampleTable,
                          txi=txi.isoforms,
                          isoforms=TRUE,
                          tx2gene=tx2gene,
@@ -65,25 +65,23 @@ summarizeSamples <- function(samples)
 #' @export
 differential.expression <- function (samples, design=~condition)
 {
-    samples$dds <- DESeq2::DESeqDataSetFromTximport(samples$txi,
+    dds <- DESeq2::DESeqDataSetFromTximport(samples$txi,
                                                     samples$sampleTable,
                                                     design)
     ## filter too low expression (TODO: Adapt)
-    samples$dds <- dds[ apply(counts(dds), 1,
-                              function (x) sum(x > 5) > 4), ]
-    samples$dds <- DESeq2::estimateSizeFactors(dds)
+    dds <- dds[ apply(DESeq2::counts(dds), 1,
+                      function (x) sum(x > 5) > 4), ]
+    dds <- DESeq2::estimateSizeFactors(dds)
     samples$dds <- DESeq2::DESeq(dds, parallel=T)
     
     return(samples)
 }
 
 
-
-
 #' @export
 condition.samples  <- function (samples, c1, c2)
 {
-    res <- results(samples$dds, contrast=c("condition", c1, c2))
+    res <- DESeq2::results(samples$dds, contrast=c("condition", c1, c2))
     if (samples$isoforms)
         {
             rownames(res)  <- sapply(strsplit(rownames(res),'\\.'),'[',1)
