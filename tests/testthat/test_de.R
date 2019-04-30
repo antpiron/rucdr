@@ -20,9 +20,13 @@ test_that("txdb is a S4 txdb", {
     expect_true(test_select())
 })
 
-sampleTable <- data.frame(filename=paste0("data/S",1:10, ".quant.sf"),
-                          name=paste0("S",1:10),
-                          condition=c(rep("ctl", 5), rep("pal", 5)))
+##set.seed(0)
+nsamples <- 10
+sampleTable <- data.frame(filename=paste0("data/S",1:nsamples,
+                                          ".quant.sf"),
+                          name=paste0("S",1:nsamples),
+                          condition=c(rep("ctl", nsamples/2),
+                                      rep("pal", nsamples/2)))
 transcripts <- c("ENST00000456328", "ENST00000450305",
                  "ENST00000473358", "ENST00000469289",
                  "ENST00000607096", "ENST00000606857")
@@ -33,9 +37,9 @@ apply(sampleTable, 1,
                Name=transcripts,
                Length=rep(100,length(transcripts)),
                EffectiveLength=rep(100,length(transcripts)))
-           quant.sf$TPM <- c(rnorm(length(transcripts), 100, 50))
+           quant.sf$TPM <- rnorm(length(transcripts), 100, 10)
            if ("pal" == entry[["condition"]])
-           { quant.sf$TPM[1] <- rnorm(1, 1000, 200) }
+           { quant.sf$TPM[1] <- rnorm(1, 1000, 10) }
            quant.sf$TPM[quant.sf$TPM < 0] <- 0
            quant.sf$TPM  <- quant.sf$TPM * 1E6 / sum(quant.sf$TPM)
            quant.sf$NumReads  <- quant.sf$TPM * 100
@@ -66,17 +70,21 @@ test_that("differential.expression()", {
 res <- differential.expression.results(de, "ctl", "pal")
 test_that("differential.expression.reults()", {
     expect_s3_class(res, "data.frame")
-    expect_true(res["ENST00000456328",]$padj < 0.01)
+    expect_true(res["ENST00000456328",]$padj < 0.05)
     expect_true(all(res[transcripts[! ("ENST00000456328" == transcripts)],]$padj > 0.05))
 })
 
-res.pipe <- sampleTable %>%
+
+res.pipe <- sampleTable %>% 
     newSamples(suppressWarnings(loadGTF("data/test.gtf"))) %>%
     differential.expression %>%
     differential.expression.results("ctl", "pal")
-test_that("differential.expression.reults() with pipe", {
-    expect_s3_class(res, "data.frame")
-    expect_true(res["ENST00000456328",]$padj < 0.01)
-    expect_true(all(res[transcripts[! ("ENST00000456328" == transcripts)],]$padj > 0.05))
+
+print(res.pipe)
+test_that("differential.expression.results() with pipe", {
+    expect_s3_class(res.pipe, "data.frame")
+    expect_true(res.pipe["ENST00000456328",]$padj < 0.05)
+    expect_true(all(res.pipe[transcripts[! ("ENST00000456328" == transcripts)],]$padj > 0.05))
 })
 
+## TODO: test summarizeSamples

@@ -66,8 +66,8 @@ summarizeSamples <- function(samples)
 differential.expression <- function (samples, design=~condition)
 {
     dds <- DESeq2::DESeqDataSetFromTximport(samples$txi,
-                                                    samples$sampleTable,
-                                                    design)
+                                            samples$sampleTable,
+                                            design)
     ## filter too low expression (TODO: Adapt)
     dds <- dds[ apply(DESeq2::counts(dds), 1,
                       function (x) sum(x > 5) > 4), ]
