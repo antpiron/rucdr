@@ -3,6 +3,10 @@ library(tximport)
 library(GenomicFeatures)
 library(DESeq2)
 
+#' Load a gtf file into a tx handle. A cache is created to improve the loading
+#' time (cache name `filename`.sqlite).
+#'
+#' @param filename The gtf filename
 #' @export
 loadGTF <- function (filename)
 {
@@ -34,7 +38,7 @@ newSamples <- function (sampleTable=
                              type = "salmon", txOut = TRUE,
                              ignoreTxVersion=T)
     k <- keys(txdb, keytype = "TXNAME")
-    tx2gene <- select(txdb, k, "GENEID", "TXNAME")
+    tx2gene <- biomaRt::select(txdb, k, "GENEID", "TXNAME")
 
     s <-  structure(list(txdb=txdb,
                          samplesTable=sampleTable,
