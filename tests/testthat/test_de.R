@@ -1,5 +1,6 @@
 context("DE")
 library(rucdr)
+library(magrittr)
 
 txdb <- suppressWarnings(loadGTF("data/test.gtf"))
 on.exit(file.remove("data/test.gtf.sqlite"))
@@ -62,8 +63,18 @@ test_that("differential.expression()", {
     expect_s3_class(de, "samples")
 })
 
-res <- condition.samples(de, "ctl", "pal")
-test_that("differential.expression()", {
+res <- differential.expression.results(de, "ctl", "pal")
+test_that("differential.expression.reults()", {
+    expect_s3_class(res, "data.frame")
+    expect_true(res["ENST00000456328",]$padj < 0.01)
+    expect_true(all(res[transcripts[! ("ENST00000456328" == transcripts)],]$padj > 0.05))
+})
+
+res.pipe <- sampleTable %>%
+    newSamples(suppressWarnings(loadGTF("data/test.gtf"))) %>%
+    differential.expression %>%
+    differential.expression.results("ctl", "pal")
+test_that("differential.expression.reults() with pipe", {
     expect_s3_class(res, "data.frame")
     expect_true(res["ENST00000456328",]$padj < 0.01)
     expect_true(all(res[transcripts[! ("ENST00000456328" == transcripts)],]$padj > 0.05))

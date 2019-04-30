@@ -49,7 +49,7 @@ newSamples <- function (sampleTable, txdb)
     return(s)
 }
 
-#' @param sample A list of samples as returned by newSamples()
+#' @param samples A list of samples as returned by newSamples()
 #' @param txdb A genomic database (gtf)
 #' @export
 summarizeSamples <- function(samples)
@@ -78,10 +78,17 @@ differential.expression <- function (samples, design=~condition)
 }
 
 
+#' Return the results
+#' 
+#' @param samples A list of samples as returned by newSamples()
+#' @param c1 Condition 1
+#' @param c2 Condition 2
+#' @param condition The column name of sampleTable passed to newSamples()
+#'     to use as contrast
 #' @export
-condition.samples  <- function (samples, c1, c2)
+differential.expression.results  <- function (samples, c1, c2, condition="condition")
 {
-    res <- DESeq2::results(samples$dds, contrast=c("condition", c1, c2))
+    res <- DESeq2::results(samples$dds, contrast=c(condition, c1, c2))
     if (samples$isoforms)
         {
             rownames(res)  <- sapply(strsplit(rownames(res),'\\.'),'[',1)
