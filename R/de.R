@@ -26,19 +26,15 @@ loadGTF <- function (filename)
 #' @param sampleTable A data frame with at least 3 columns
 #'     "filename", "name" and "condition"
 #' @export
-newSamples <- function (sampleTable=
-                            setNames(
-                                data.frame(matrix(ncol = 3, nrow = 0)),
-                                c("filename", "name", "condition")),
-                        txdb)
+newSamples <- function (sampleTable, txdb)
 {
-    names(sampleTable) <- sampleTable$name
-    
-    txi.isoforms <- tximport(sampleTable$filename,
+    row.names(sampleTable) <- sampleTable$name
+
+    txi.isoforms <- tximport(as.character(sampleTable$filename),
                              type = "salmon", txOut = TRUE,
                              ignoreTxVersion=T)
     k <- keys(txdb, keytype = "TXNAME")
-    tx2gene <- biomaRt::select(txdb, k, "GENEID", "TXNAME")
+    tx2gene <- select(txdb, k, "GENEID", "TXNAME")
 
     s <-  structure(list(txdb=txdb,
                          samplesTable=sampleTable,

@@ -1,0 +1,55 @@
+context("DE")
+library(rucdr)
+
+txdb <- loadGTF("data/test.gtf")
+on.exit(file.remove("data/test.gtf.sqlite"))
+
+test_select <- function ()
+{
+    k <- keys(txdb, keytype = "TXNAME")
+    tx2gene <- select(txdb, k, "GENEID", "TXNAME")
+    check <- tx2gene$GENEID[tx2gene$TXNAME == "ENST00000456328"] ==
+        "ENSG00000223972"
+    return(check)
+}
+
+
+test_that("txdb is a S4 txdb", {
+    expect_type(txdb, "S4")
+    expect_true(test_select())
+})
+
+sampleTable <- data.frame(filename=paste0("data/S",1:10, ".quant.sf"),
+                          name=paste0("S",1:10),
+                          condition=c(rep("ctl", 5), rep("pal", 5)))
+transcripts <- c("ENST00000456328", "ENST00000450305",
+                 "ENST00000473358", "ENST00000469289",
+                 "ENST00000607096", "ENST00000606857")
+apply(sampleTable, 1,
+       function (entry)
+       {
+           quant.sf <- data.frame(
+               Name=transcripts,
+               Length=rep(100,length(transcripts)),
+               EffectiveLength=rep(100,length(transcripts)))
+           quant.sf$TPM <- c(rnorm(length(transcripts), 100, 50))
+           if ("pal" == entry[["condition"]])
+           { quant.sf$TPM[1] <- rnorm(1, 1000, 200) }
+           quant.sf$TPM[quant.sf$TPM < 0] <- 0
+           quant.sf$TPM  <- quant.sf$TPM * 1E6 / sum(quant.sf$TPM)
+           quant.sf$NumReads  <- quant.sf$TPM * 100
+           write.table(quant.sf,	file=entry[["filename"]],
+                       row.names=FALSE, quote=FALSE, sep="\t")
+       })
+
+on.exit(sapply(as.character(sampleTable$filename),
+               function (f) file.remove(f)),
+        add = TRUE)
+
+samples <- newSamples(sampleTable, txdb)
+
+test_that("Differential expression ctl vs pal", {
+    
+})
+
+
