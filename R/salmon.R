@@ -81,10 +81,10 @@ salmon.pipeline <- function (pipeline)
     {
         indexes <- which(!is.na(pipeline$metadata$salmon.quant.sf))
         filenames <- pipeline$metadata$salmon.quant.sf[indexes]
-        names(filenames) <- pipeline$metadata$name[indexes]
     }
 
-    names(filenames) <- pipeline$metadata[indexes,"name"]
+    filenames <- as.character(filenames)
+    names(filenames) <- pipeline$metadata$name[indexes]
     
     pipeline$metadata[,"salmon.quant.sf"] <- NA
     pipeline$metadata[indexes,"salmon.quant.sf"] <- filenames
@@ -94,7 +94,7 @@ salmon.pipeline <- function (pipeline)
     pipeline$salmon = list()
     if (length(filenames) > 0)
         pipeline$salmon$txi.isoforms <- tximport::tximport(
-                                                      as.character(filenames),
+                                                      filenames,
                                                       type = "salmon", txOut = TRUE,
                                                       ignoreTxVersion=T)
     else

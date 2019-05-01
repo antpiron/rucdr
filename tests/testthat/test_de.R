@@ -40,14 +40,16 @@ pl$metadata <- sampleTable
 
 pl <- pl %>% options(gtf="data/test.gtf") %>%  salmon() 
 
-##print(pl$metadata)
-##print(pl$salmon)
+## print(pl$metadata)
+## print(pl$salmon)
 
 test_that("salmon()", {
     expect_s3_class(pl, "pipeline")
     expect_true(!is.null(pl$salmon$txi.isoforms))
     expect_equal(dim(pl$salmon$txi.isoforms$counts),
                  c(length(transcripts), nrow(sampleTable)))
+    expect_equal(colnames(pl$salmon$txi.isoforms$counts),
+                 as.character(sampleTable$name))
 })
 
 
