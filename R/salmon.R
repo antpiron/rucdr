@@ -7,6 +7,7 @@ salmon_process <- function (pipeline, sample)
     salmon.output.dir <- file.path(pipeline$option$output.dir, "salmon",
                                    sample$name)
     salmon.output.quant.sf <- file.path(salmon.output.dir, "quant.sf")
+
     if (file.exists(salmon.output.quant.sf))
     {
         return(salmon.output.quant.sf)
@@ -58,30 +59,31 @@ salmon <- function (pipeline, ...)
 #' @export
 salmon.pipeline <- function (pipeline)
 {
-    if (is.null(pipeline$metadata$salmon.quant.sf))
+    if (is.null(pipeline$metadata$salmon.quant.sf) &&
+        is.null(pipeline$metadata$fastq1))
     {
-        if (is.null(pipeline$metadata$fastq1))
-        {
-            warning("No fastq1 column in metadata")
-            return(pipeline)
-        }
-        indexes <- which(!is.na(pipeline$metadata$fastq1))
-        filenames <- parallel::mclapply(
-                                   indexes,
-                                   function (i)
+        warning("No fastq1 nor salmon.quant.sf column in metadata")
+        return(pipeline)
+    }
+
+    indexes <- 1:nrow(pipeline$metadata)
+    filenames <- parallel::mclapply(
+                               indexes,
+                               function (i)
+                               {
+                                    if ( is.null(pipeline$metadata$fastq1) ||
+                                        is.null(pipeline$metadata$fastq1[i]))
                                    {
-                                       salmon_process(pipeline,
-                                                      as.list(pipeline$metadata[i,]))
-                                   },
-                                   mc.cores=pipeline$option$njobs)
-        
-        filenames <- unlist(filenames)
-    }
-    else
-    {
-        indexes <- which(!is.na(pipeline$metadata$salmon.quant.sf))
-        filenames <- pipeline$metadata$salmon.quant.sf[indexes]
-    }
+                                       return(as.character(
+                                           pipeline$metadata$salmon.quant.sf[i]))
+                                   }
+                                   
+                                   as.character(salmon_process(
+                                       pipeline,
+                                       as.list(pipeline$metadata[i,])))
+                               },
+                               mc.cores=pipeline$option$njobs)
+    
 
     filenames <- as.character(filenames)
     names(filenames) <- pipeline$metadata$name[indexes]

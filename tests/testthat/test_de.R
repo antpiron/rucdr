@@ -6,8 +6,9 @@ library(magrittr)
 
 set.seed(1)
 nsamples <- 10
-sampleTable <- data.frame(salmon.quant.sf=paste0("data/S",1:nsamples,
-                                          ".quant.sf"),
+sampleTable <- data.frame(salmon.quant.sf=file.path("output",
+                                                    paste0("S",1:nsamples),
+                                                    "quant.sf"),
                           name=paste0("S",1:nsamples),
                           condition=c(rep("ctl", nsamples/2),
                                       rep("pal", nsamples/2)))
@@ -27,12 +28,16 @@ apply(sampleTable, 1,
            quant.sf$TPM[quant.sf$TPM < 0] <- 0
            quant.sf$TPM  <- quant.sf$TPM * 1E6 / sum(quant.sf$TPM)
            quant.sf$NumReads  <- quant.sf$TPM * 100
-           write.table(quant.sf,	file=entry[["salmon.quant.sf"]],
+
+           dir=file.path("output", entry[["name"]])
+           dir.create(dir, recursive=T)
+           
+           write.table(quant.sf,
+                       file=entry[["salmon.quant.sf"]],
                        row.names=FALSE, quote=FALSE, sep="\t")
        })
 
-on.exit(sapply(as.character(sampleTable$filename),
-               function (f) file.remove(f)),
+on.exit(unlink("output", recursive=T),
         add = TRUE)
 
 pl <- pipeline()
