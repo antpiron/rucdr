@@ -2,23 +2,9 @@ context("DE")
 library(rucdr)
 library(magrittr)
 
-txdb <- suppressWarnings(loadGTF("data/test.gtf"))
-on.exit(file.remove("data/test.gtf.sqlite"))
 
-test_select <- function ()
-{
-    k <- biomaRt::keys(txdb, keytype = "TXNAME")
-    tx2gene <- biomaRt::select(txdb, k, "GENEID", "TXNAME")
-    check <- tx2gene$GENEID[tx2gene$TXNAME == "ENST00000456328"] ==
-        "ENSG00000223972"
-    return(check)
-}
+return()
 
-
-test_that("txdb is a S4 txdb", {
-    expect_type(txdb, "S4")
-    expect_true(test_select())
-})
 
 set.seed(1)
 nsamples <- 10

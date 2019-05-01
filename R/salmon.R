@@ -1,50 +1,127 @@
 
 
 
-
-salmon.process <- function (sample, nthreads=4,
-                            index="", output.dir="")
+salmon_process <- function (pipeline, sample)
 {
-    fastq1 <- sample["fastq1"]
-    fastq2 <- sample["fastq2"]
-    name <- sample["name"]
-    paired <- ! is.na(fastq2)
-
-    tmp.dir <- tempfile(pattern="dir-")
-    dir.create(tmp.dir)
+    paired <- ! is.null(sample$fastq2) &&  ! is.na(sample$fastq2) && "" != sample$fastq2
+    salmon.output.dir <- file.path(pipeline$option$output.dir, "salmon",
+                                   sample$name)
+    salmon.output.quant.sf <- file.path(salmon.output.dir, "quant.sf")
+    if (file.exists(salmon.output.quant.sf))
+    {
+        return(salmon.output.quant.sf)
+    }
     
+    tmp.dir <- tempfile(pattern="salmon-")
+    dir.create(tmp.dir)
+
+    fastq.param <- if (paired) {
+                       c("-1", as.character(sample$fastq1),
+                         "-2", as.character(sample$fastq2))
+                   } else {
+                       c("-r", as.character(sample$fastq1)) }
+
     param <- c("quant", "--seqBias", "--gcBias",
                "--no-version-check", "--validateMappings",
-               "-p", nthreads, "-i", index, "-l", "A",
-               ifelse(paired,
-                      c("-1", fastq1, "-2", fastq2),
-                      c("-r", fastq1)),
+               "-p", pipeline$option$nthreads,
+               "-i", as.character(pipeline$option$salmon.index),
+               "-l", "A",
+               fastq.param,
                "-o", tmp.dir)
-
 
     ret <- system2("salmon", param, wait = TRUE)
 
     if (0 != ret)
     {
+        warning( paste0("Salmon returned ", ret, ". Check ", tmp.dir,".") )
         return(NA)
     }
-    mydir <- file.path(output.dir,name)
-    file.rename(tmp.dir, mydir)
+    file.rename(tmp.dir, salmon.output.dir)
     
-    return(file.path(mydir,"quant.sf"))
+    return(salmon.output.quant.sf)
 }
 
-
+#' Run salmon over the fastq files
+#' 
+#' @param pipeline A pipeline object
+#' @param ... other arguments
 #' @export
-salmon <- function (sampleTable, output.dir="output/salmon/",
-                    njobs=1, nthreads=4)
+salmon <- function (pipeline, ...)
 {
-    parallel::mclapply(1:nrow(sampleTable),
-                       function (i)
-                       {
-                           salmon.process(sampleTable[i,])
-                       },
-                       mc.cores=njobs)
+    UseMethod("salmon", pipeline)
+}
 
-    return(sampleTable)
+#' Run salmon over the fastq files
+#' 
+#' @param pipeline A pipeline object
+#' @rdname salmon
+#' @export
+salmon.pipeline <- function (pipeline)
+{
+    if (is.null(pipeline$metadata$fastq1))
+    {
+        warn("No fastq1 column in metadata")
+        return(pipeline)
+    }
+    indexes <- which(!is.na(pipeline$metadata$fastq1))
+    filenames <- parallel::mclapply(indexes,
+                                    function (i)
+                                    {
+                                        salmon_process(pipeline,
+                                                       as.list(pipeline$metadata[i,]))
+                                    },
+                                    mc.cores=pipeline$option$njobs)
+    filenames <- unlist(filenames)
+    names(filenames) <- pipeline$metadata[indexes,"name"]
+
+    pipeline$metadata[,"salmon.quant.sf"] <- NA
+    pipeline$metadata[indexes,"salmon.quant.sf"] <- filenames
+
+    filenames <- filenames[! is.na(filenames) ]
+    pipeline$salmon = list()
+    if (length(filenames) > 0)
+        pipeline$salmon$txi.isoforms <- tximport::tximport(
+                                                      as.character(filenames),
+                                                      type = "salmon", txOut = TRUE,
+                                                      ignoreTxVersion=T)
+    else
+        pipeline$salmon$txi.isoforms <- NULL
+
+    pipeline <- tx2genes(pipeline)
+
+    return(pipeline)
+}
+
+#' Run salmon for genes expression
+#' 
+#' @param pipeline A pipeline object
+#' @param ... other arguments
+#' @export
+salmonGenes <- function (pipeline, ...)
+{
+    UseMethod("salmonGenes", pipeline)
+}
+
+#' Run salmon for genes expression
+#' 
+#' @param pipeline A pipeline object
+#' @rdname salmonGenes
+#' @export
+salmonGenes.pipeline <- function(pipeline)
+{
+    if (is.null(pipeline$salmon))
+        pipeline <- salmon(pipeline)
+
+    if (is.null(pipeline$salmon$txi.isoforms))
+    {
+        warning("No pipeline$salmon$txi.isoforms")
+        return(pipeline)
+    }
+    
+    pipeline$salmon$txi.genes  <- tximport::summarizeToGene(
+                                                pipeline$salmon$txi.isoforms,
+                                                pipeline$tx2gene,
+                                                ignoreTxVersion=T)
+        
+    return(pipeline)
 }

@@ -4,98 +4,77 @@
 ##library(DESeq2)
 ##library(AnnotationDbi)
 
-#' Load a gtf file into a tx handle. A cache is created to improve the loading
-#' time (cache name `filename`.sqlite).
-#'
-#' @param filename The gtf filename
+
+#' Run deseq2
+#' 
+#' @param pipeline A pipeline object
+#' @param ... other arguments
 #' @export
-loadGTF <- function (filename)
+deseq2 <- function (pipeline, ...)
 {
-    sqlite <- paste0(filename, ".sqlite")
-    if (file.exists(sqlite))
-        txdb <- AnnotationDbi::loadDb(sqlite)
-    else
+    UseMethod("deseq2", pipeline)
+}
+
+#' Run salmon for genes expression
+#' 
+#' @param pipeline A pipeline object
+#' @rdname deseq2
+#' @export
+deseq2 <- function (pipeline, design=~condition)
+{
+    if (is.null(pipeline$salmon))
     {
-        txdb <- GenomicFeatures::makeTxDbFromGFF(filename)
-        AnnotationDbi::saveDb(txdb,sqlite)
+        warning("Have you call salmon()?")
+        return(pipeline)
     }
 
-    return(txdb)
-}
+    if (is.null(pipeline$salmon$txi.isoforms))
+    {
+        warning("No pipeline$salmon$txi.isoforms")
+        return(pipeline)
+    }
 
-#'
-#' @param sampleTable A data frame with at least 3 columns
-#'     "filename", "name" and "condition"
-#' @export
-newSamples <- function (sampleTable, txdb)
-{
-    row.names(sampleTable) <- sampleTable$name
-
-    txi.isoforms <- tximport::tximport(as.character(sampleTable$filename),
-                                       type = "salmon", txOut = TRUE,
-                                       ignoreTxVersion=T)
-    k <- biomaRt::keys(txdb, keytype = "TXNAME")
-    tx2gene <- biomaRt::select(txdb, k, "GENEID", "TXNAME")
-
-    s <-  structure(list(txdb=txdb,
-                         sampleTable=sampleTable,
-                         txi=txi.isoforms,
-                         isoforms=TRUE,
-                         tx2gene=tx2gene,
-                         dds=NULL
-                         ),
-                    class = "samples")
-
-    return(s)
-}
-
-#' @param samples A list of samples as returned by newSamples()
-#' @param txdb A genomic database (gtf)
-#' @export
-summarizeSamples <- function(samples)
-{
-    samples$txi  <- tximport::summarizeToGene(samples$txi,
-                                              samples$tx2gene,
-                                              ignoreTxVersion=T)
-    samples$isoforms=FALSE
-        
-    return(samples)
-}
-
-#' @export
-differential.expression <- function (samples, design=~condition)
-{
-    dds <- DESeq2::DESeqDataSetFromTximport(samples$txi,
-                                            samples$sampleTable,
+    ## TODO: is metadata corresponding to txi.isoforms columns?
+    dds <- DESeq2::DESeqDataSetFromTximport(pipeline$salmon$txi.isoforms,
+                                            pipeline$metadata,
                                             design)
-    ## filter too low expression (TODO: Adapt)
+    ## TODO: custom filter because too low expression 
     dds <- dds[ apply(DESeq2::counts(dds), 1,
                       function (x) sum(x > 5) > 4), ]
     dds <- DESeq2::estimateSizeFactors(dds)
-    samples$dds <- DESeq2::DESeq(dds, parallel=T)
+    dds <- DESeq2::DESeq(dds, parallel=T)
+    pipeline$dseq2 <- list(dds.isoforms=dds)
     
-    return(samples)
+    return(pipeline)
 }
 
 
 #' Return the results
 #' 
-#' @param samples A list of samples as returned by newSamples()
+#' @param pipeline A pipeline object
 #' @param c1 Condition 1
 #' @param c2 Condition 2
 #' @param condition The column name of sampleTable passed to newSamples()
 #'     to use as contrast
+#' @param isoforms True if isoforms result (default: True)
 #' @export
-differential.expression.results  <- function (samples, c1, c2, condition="condition")
+deseq2Results  <- function (pipeline, c1, c2, condition="condition", isoforms=T)
 {
-    res <- DESeq2::results(samples$dds, contrast=c(condition, c1, c2))
-    if (samples$isoforms)
-        {
-            rownames(res)  <- sapply(strsplit(rownames(res),'\\.'),'[',1)
-            res <- merge(as.data.frame(res), samples$tx2gene,
-                         by.x=0, by.y="TXNAME", all.x=T)
-            rownames(res) <- res$Row.names
-            res <- res[-1]
-        }
+    dds <- if (isoforms) pipeline$dseq2$dds.isoforms else pipeline$dseq2$dds.genes
+    res <- DESeq2::results(dds, contrast=c(condition, c1, c2))
+    if (isoforms)
+    {
+        rownames(res)  <- sapply(strsplit(rownames(res),'\\.'),'[',1)
+        res <- merge(as.data.frame(res), pipeline$tx2gene,
+                     by.x=0, by.y="TXNAME", all.x=T)
+        rownames(res) <- res$Row.names
+        res <- res[-1]
+    }
     return (res)
 }
+
+## pipeline() %>% metadata("data/metadata.tsv") %>%
+##     options(
+##         salmon.index="~/data/ensembl/GRCh38/Homo_sapiens.GRCh38.cdna.all.salmon.index",
+##         gtf="~/data/ensembl/GRCh38/Homo_sapiens.GRCh38.95.gtf.gz") %>%
+##     salmonGenes()
