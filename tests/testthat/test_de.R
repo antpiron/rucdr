@@ -3,12 +3,10 @@ library(rucdr)
 library(magrittr)
 
 
-return()
-
 
 set.seed(1)
 nsamples <- 10
-sampleTable <- data.frame(filename=paste0("data/S",1:nsamples,
+sampleTable <- data.frame(salmon.quant.sf=paste0("data/S",1:nsamples,
                                           ".quant.sf"),
                           name=paste0("S",1:nsamples),
                           condition=c(rep("ctl", nsamples/2),
@@ -29,7 +27,7 @@ apply(sampleTable, 1,
            quant.sf$TPM[quant.sf$TPM < 0] <- 0
            quant.sf$TPM  <- quant.sf$TPM * 1E6 / sum(quant.sf$TPM)
            quant.sf$NumReads  <- quant.sf$TPM * 100
-           write.table(quant.sf,	file=entry[["filename"]],
+           write.table(quant.sf,	file=entry[["salmon.quant.sf"]],
                        row.names=FALSE, quote=FALSE, sep="\t")
        })
 
@@ -37,40 +35,33 @@ on.exit(sapply(as.character(sampleTable$filename),
                function (f) file.remove(f)),
         add = TRUE)
 
-samples <- newSamples(sampleTable, txdb)
+pl <- pipeline()
+pl$metadata <- sampleTable
 
-##print(samples$txi)
+pl <- pl %>% options(gtf="data/test.gtf") %>%  salmon() 
 
-test_that("newSamples()", {
-    expect_s3_class(samples, "samples")
-    expect_true(all(samples$sampleTable$name == sampleTable$name))
-    expect_equal(dim(samples$txi$counts),
+##print(pl$metadata)
+##print(pl$salmon)
+
+test_that("salmon()", {
+    expect_s3_class(pl, "pipeline")
+    expect_true(!is.null(pl$salmon$txi.isoforms))
+    expect_equal(dim(pl$salmon$txi.isoforms$counts),
                  c(length(transcripts), nrow(sampleTable)))
 })
 
-de <- differential.expression(samples)
-test_that("differential.expression()", {
-    expect_s3_class(de, "samples")
+
+pl <- pl %>% deseq2()
+test_that("deseq2()", {
+    expect_s3_class(pl, "pipeline")
 })
 
-res <- differential.expression.results(de, "ctl", "pal")
-test_that("differential.expression.reults()", {
+res <- pl %>% deseq2Results("ctl", "pal")
+test_that("deseq2Results()", {
     expect_s3_class(res, "data.frame")
     expect_true(res["ENST00000456328",]$padj < 0.05)
     expect_true(all(res[transcripts[! ("ENST00000456328" == transcripts)],]$padj > 0.05))
 })
 
-
-res.pipe <- sampleTable %>% 
-    newSamples(suppressWarnings(loadGTF("data/test.gtf"))) %>%
-    differential.expression %>%
-    differential.expression.results("ctl", "pal")
-
-print(res.pipe)
-test_that("differential.expression.results() with pipe", {
-    expect_s3_class(res.pipe, "data.frame")
-    expect_true(res.pipe["ENST00000456328",]$padj < 0.05)
-    expect_true(all(res.pipe[transcripts[! ("ENST00000456328" == transcripts)],]$padj > 0.05))
-})
 
 ## TODO: test summarizeSamples

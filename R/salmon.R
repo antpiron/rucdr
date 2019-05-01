@@ -58,26 +58,39 @@ salmon <- function (pipeline, ...)
 #' @export
 salmon.pipeline <- function (pipeline)
 {
-    if (is.null(pipeline$metadata$fastq1))
+    if (is.null(pipeline$metadata$salmon.quant.sf))
     {
-        warn("No fastq1 column in metadata")
-        return(pipeline)
+        if (is.null(pipeline$metadata$fastq1))
+        {
+            warning("No fastq1 column in metadata")
+            return(pipeline)
+        }
+        indexes <- which(!is.na(pipeline$metadata$fastq1))
+        filenames <- parallel::mclapply(
+                                   indexes,
+                                   function (i)
+                                   {
+                                       salmon_process(pipeline,
+                                                      as.list(pipeline$metadata[i,]))
+                                   },
+                                   mc.cores=pipeline$option$njobs)
+        
+        filenames <- unlist(filenames)
     }
-    indexes <- which(!is.na(pipeline$metadata$fastq1))
-    filenames <- parallel::mclapply(indexes,
-                                    function (i)
-                                    {
-                                        salmon_process(pipeline,
-                                                       as.list(pipeline$metadata[i,]))
-                                    },
-                                    mc.cores=pipeline$option$njobs)
-    filenames <- unlist(filenames)
-    names(filenames) <- pipeline$metadata[indexes,"name"]
+    else
+    {
+        indexes <- which(!is.na(pipeline$metadata$salmon.quant.sf))
+        filenames <- pipeline$metadata$salmon.quant.sf[indexes]
+        names(filenames) <- pipeline$metadata$name[indexes]
+    }
 
+    names(filenames) <- pipeline$metadata[indexes,"name"]
+    
     pipeline$metadata[,"salmon.quant.sf"] <- NA
     pipeline$metadata[indexes,"salmon.quant.sf"] <- filenames
-
+    
     filenames <- filenames[! is.na(filenames) ]
+    
     pipeline$salmon = list()
     if (length(filenames) > 0)
         pipeline$salmon$txi.isoforms <- tximport::tximport(
