@@ -22,22 +22,26 @@ deseq2 <- function (pipeline, ...)
 #' @export
 deseq2 <- function (pipeline, design=~condition)
 {
-    if (is.null(pipeline$salmon))
+    
+    if (is.null(pipeline$salmon) || is.null(pipeline$salmon$tlast.txi) )
     {
         warning("Have you called salmon()? Doing nothing! No deseq2 call!")
         return(pipeline)
     }
 
-    if (is.null(pipeline$salmon$txi.isoforms))
+    txi <- if ( "isoforms" == pipeline$salmon$tlast.txi ) pipeline$salmon$txi.isoforms else pipeline$salmon$txi.genes
+    
+    if (is.null(txi))
     {
-        warning("No pipeline$salmon$txi.isoforms. Doing nothing! No deseq2 call!")
+        warning(paste0("No txi for", pipeline$salmon$tlast.txi ,
+                       ". Doing nothing! No deseq2 call!"))
         return(pipeline)
     }
 
     metadata <- pipeline$metadata[
                              ! is.na(pipeline$metadata$salmon.quant.sf),]
     ## TODO: is metadata corresponding to txi.isoforms columns?
-    dds <- DESeq2::DESeqDataSetFromTximport(pipeline$salmon$txi.isoforms,
+    dds <- DESeq2::DESeqDataSetFromTximport(txi,
                                             metadata,
                                             design)
     ## TODO: custom filter because too low expression 
@@ -45,7 +49,14 @@ deseq2 <- function (pipeline, design=~condition)
                       function (x) sum(x > 5) > 4), ]
     dds <- DESeq2::estimateSizeFactors(dds)
     dds <- DESeq2::DESeq(dds, parallel=T)
-    pipeline$dseq2 <- list(dds.isoforms=dds)
+    
+    if (is.null(pipeline$dseq2))
+        pipeline$dseq2 <- list()
+        
+    if ("isoforms" == pipeline$salmon$tlast.txi)
+        pipeline$dseq2$dds.isoforms  <- dds
+    else
+        pipeline$dseq2$dds.genes <- dds
     
     return(pipeline)
 }
@@ -58,10 +69,11 @@ deseq2 <- function (pipeline, design=~condition)
 #' @param c2 Condition 2
 #' @param condition The column name of sampleTable passed to newSamples()
 #'     to use as contrast
-#' @param isoforms True if isoforms result (default: True)
+#' @param isoforms True if isoforms result (default: NULL)
 #' @export
-deseq2Results  <- function (pipeline, c1, c2, condition="condition", isoforms=T)
+deseq2Results  <- function (pipeline, c1, c2, condition="condition", isoforms=NULL)
 {
+    isoforms <- if (is.null(isoforms)) "isoforms" == pipeline$salmon$tlast.txi else isoforms
     dds <- if (isoforms) pipeline$dseq2$dds.isoforms else pipeline$dseq2$dds.genes
     res <- DESeq2::results(dds, contrast=c(condition, c1, c2))
     if (isoforms)

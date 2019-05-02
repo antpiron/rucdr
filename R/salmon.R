@@ -4,6 +4,20 @@
 salmon_process <- function (pipeline, sample)
 {
     paired <- ! is.null(sample$fastq2) &&  ! is.na(sample$fastq2) && "" != sample$fastq2
+    if (! file.exists(sample$fastq1) )
+    {
+        warning( paste0("salmon_process(): file ",
+                        sample$fastq1, " does not exist") )
+        return(NA)
+
+    }
+    if (paired && ! file.exists(sample$fastq2) )
+    {
+        warning( paste0("salmon_process(): file ",
+                        sample$fastq2, " does not exist") )
+        return(NA)
+
+    }
     salmon.output.dir <- file.path(pipeline$option$output.dir, "salmon",
                                    sample$id)
     salmon.output.quant.sf <- file.path(salmon.output.dir, "quant.sf")
@@ -38,7 +52,8 @@ salmon_process <- function (pipeline, sample)
         return(NA)
     }
     tmp.quant.sf = file.path(tmp.dir, "quant.sf")
-    if (! file.exists(tmp.quant.sf) )
+    if (! file.exists(tmp.quant.sf) ||
+        1000 != length(readLines(file(tmp.quant.sf), n = 1000)))
     {
         warning( paste0("Salmon do not seem to have created the file ",
                         tmp.quant.sf, ".") )
@@ -103,10 +118,13 @@ salmon.pipeline <- function (pipeline)
     pipeline$salmon = list()
     ##print(filenames)
     if (length(filenames) > 0)
+    {
         pipeline$salmon$txi.isoforms <- tximport::tximport(
                                                       filenames,
                                                       type = "salmon", txOut = TRUE,
                                                       ignoreTxVersion=T)
+        pipeline$salmon$tlast.txi <- "isoforms"
+    }
     else
         pipeline$salmon$txi.isoforms <- NULL
 
@@ -145,6 +163,7 @@ salmonGenes.pipeline <- function(pipeline)
                                                 pipeline$salmon$txi.isoforms,
                                                 pipeline$tx2gene,
                                                 ignoreTxVersion=T)
-        
+    pipeline$salmon$tlast.txi <- "genes"
+
     return(pipeline)
 }
