@@ -5,7 +5,7 @@ salmon_process <- function (pipeline, sample)
 {
     paired <- ! is.null(sample$fastq2) &&  ! is.na(sample$fastq2) && "" != sample$fastq2
     salmon.output.dir <- file.path(pipeline$option$output.dir, "salmon",
-                                   sample$name)
+                                   sample$id)
     salmon.output.quant.sf <- file.path(salmon.output.dir, "quant.sf")
 
     if (file.exists(salmon.output.quant.sf))
@@ -35,6 +35,13 @@ salmon_process <- function (pipeline, sample)
     if (0 != ret)
     {
         warning( paste0("Salmon returned ", ret, ". Check ", tmp.dir,".") )
+        return(NA)
+    }
+    tmp.quant.sf = file.path(tmp.dir, "quant.sf")
+    if (! file.exists(tmp.quant.sf) )
+    {
+        warning( paste0("Salmon do not seem to have created the file ",
+                        tmp.quant.sf, ".") )
         return(NA)
     }
     file.rename(tmp.dir, salmon.output.dir)
@@ -94,6 +101,7 @@ salmon.pipeline <- function (pipeline)
     filenames <- filenames[! is.na(filenames) ]
     
     pipeline$salmon = list()
+    ##print(filenames)
     if (length(filenames) > 0)
         pipeline$salmon$txi.isoforms <- tximport::tximport(
                                                       filenames,

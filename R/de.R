@@ -24,19 +24,21 @@ deseq2 <- function (pipeline, design=~condition)
 {
     if (is.null(pipeline$salmon))
     {
-        warning("Have you call salmon()?")
+        warning("Have you called salmon()? Doing nothing! No deseq2 call!")
         return(pipeline)
     }
 
     if (is.null(pipeline$salmon$txi.isoforms))
     {
-        warning("No pipeline$salmon$txi.isoforms")
+        warning("No pipeline$salmon$txi.isoforms. Doing nothing! No deseq2 call!")
         return(pipeline)
     }
 
+    metadata <- pipeline$metadata[
+                             ! is.na(pipeline$metadata$salmon.quant.sf),]
     ## TODO: is metadata corresponding to txi.isoforms columns?
     dds <- DESeq2::DESeqDataSetFromTximport(pipeline$salmon$txi.isoforms,
-                                            pipeline$metadata,
+                                            metadata,
                                             design)
     ## TODO: custom filter because too low expression 
     dds <- dds[ apply(DESeq2::counts(dds), 1,
