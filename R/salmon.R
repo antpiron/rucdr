@@ -4,26 +4,29 @@
 salmon_process <- function (pipeline, sample)
 {
     paired <- ! is.null(sample$fastq2) &&  ! is.na(sample$fastq2) && "" != sample$fastq2
+    message(paste0('===== salmon ', sample$id))
     if (! file.exists(sample$fastq1) )
     {
-        warning( paste0("salmon_process(): file ",
+        message( paste0("salmon_process(): file ",
                         sample$fastq1, " does not exist") )
         return(NA)
 
     }
     if (paired && ! file.exists(sample$fastq2) )
     {
-        warning( paste0("salmon_process(): file ",
+        message( paste0("salmon_process(): file ",
                         sample$fastq2, " does not exist") )
         return(NA)
 
     }
+    message('===== PAIRED')
     salmon.output.dir <- file.path(pipeline$option$output.dir, "salmon",
                                    sample$id)
     salmon.output.quant.sf <- file.path(salmon.output.dir, "quant.sf")
 
     if (file.exists(salmon.output.quant.sf))
     {
+        message(paste0('===== exists ', salmon.output.quant.sf))
         return(salmon.output.quant.sf)
     }
     
@@ -55,11 +58,18 @@ salmon_process <- function (pipeline, sample)
     if (! file.exists(tmp.quant.sf) ||
         1000 != length(readLines(file(tmp.quant.sf), n = 1000)))
     {
-        warning( paste0("Salmon do not seem to have created the file ",
+        message( paste0("Salmon do not seem to have created the file ",
                         tmp.quant.sf, ".") )
         return(NA)
     }
-    file.rename(tmp.dir, salmon.output.dir)
+    message(paste0("====== renaming ", tmp.dir,
+                   " to ", salmon.output.dir, "."))
+    ## fail for some reason
+    ## file.rename(tmp.dir, salmon.output.dir)
+    ## TODO: Delete after verification that everything is copied
+    mydir <- file.path(pipeline$option$output.dir, "salmon")
+    file.copy(tmp.dir, mydir)
+    file.rename(file.path(mydir, basename(tmp.dir)), salmon.output.dir)
     
     return(salmon.output.quant.sf)
 }
@@ -104,7 +114,8 @@ salmon.pipeline <- function (pipeline)
                                        pipeline,
                                        as.list(pipeline$metadata[i,])))
                                },
-                               mc.cores=pipeline$option$njobs)
+                               mc.cores=pipeline$option$njobs,
+                               mc.silent=FALSE)
     
 
     filenames <- as.character(filenames)
