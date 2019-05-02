@@ -9,7 +9,7 @@ nsamples <- 10
 sampleTable <- data.frame(salmon.quant.sf=file.path("output",
                                                     paste0("S",1:nsamples),
                                                     "quant.sf"),
-                          name=paste0("S",1:nsamples),
+                          id=paste0("S",1:nsamples),
                           condition=c(rep("ctl", nsamples/2),
                                       rep("pal", nsamples/2)))
 transcripts <- c("ENST00000456328", "ENST00000450305",
@@ -29,7 +29,7 @@ apply(sampleTable, 1,
            quant.sf$TPM  <- quant.sf$TPM * 1E6 / sum(quant.sf$TPM)
            quant.sf$NumReads  <- quant.sf$TPM * 100
 
-           dir=file.path("output", entry[["name"]])
+           dir=file.path("output", entry[["id"]])
            dir.create(dir, recursive=T)
            
            write.table(quant.sf,
@@ -54,7 +54,7 @@ test_that("salmon()", {
     expect_equal(dim(pl$salmon$txi.isoforms$counts),
                  c(length(transcripts), nrow(sampleTable)))
     expect_equal(colnames(pl$salmon$txi.isoforms$counts),
-                 as.character(sampleTable$name))
+                 as.character(sampleTable$id))
 })
 
 

@@ -1,0 +1,27 @@
+---
+title: "rucdr"
+author: "Anthony PIRON"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r}
+df <- data.frame(fastq1=c("S1_R1.tar.gz", "S2_R1.tar.gz"),
+	             fastq2=c("S1_R2.tar.gz", "S2_R2.tar.gz"),
+				 id=c("S1", "S2"),
+				 condition=c("ctl", "pal"))
+df
+```
+
+```{r}
+## pipeline() %>% metadata("data/metadata.tsv") %>%
+##     options(
+##         salmon.index="~/data/ensembl/GRCh38/Homo_sapiens.GRCh38.cdna.all.salmon.index",
+##         gtf="~/data/ensembl/GRCh38/Homo_sapiens.GRCh38.95.gtf.gz") %>%
+##     salmon() %>% deseq2() %>% deseq2Results("ctl", "cond")
+
+```

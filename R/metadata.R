@@ -21,9 +21,9 @@ metadata.pipeline <- function (pipeline, filename="metadata.tsv")
     metadata <- read.table(filename, header = TRUE,
                               sep="\t", quote="")
         
-    if (is.null(metadata$name)) { stop("Mandatory `name` column missing.") }
+    if (is.null(metadata$id)) { stop("Mandatory `id` column missing.") }
 
-    row.names(metadata) <- metadata$name
+    row.names(metadata) <- metadata$id
     pipeline$metadata <- metadata    
 
     return(pipeline)

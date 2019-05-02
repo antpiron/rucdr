@@ -2,11 +2,19 @@ Package: rucdr
 Version: 0.1
 Date: 2019-04-29
 Title: R ucdr pipeline
-Description: R ucdr pipeline.
+Description: R ucdr pipeline simplifies analysis of sequencing
+    data.
 Author: Anthony Piron <anthony.piron@ulb.ac.be>
 Maintainer: Anthony Piron <anthony.piron@ulb.ac.be>
 Depends:
-   parallel
+    parallel,
+    AnnotationDbi,
+    biomaRt,
+    DESeq2,
+    GenomicFeatures,
+    tximport
 RoxygenNote: 6.1.1
 Suggests: 
-    testthat
+    testthat,
+    knitr
+VignetteBuilder: knitr

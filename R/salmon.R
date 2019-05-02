@@ -86,7 +86,7 @@ salmon.pipeline <- function (pipeline)
     
 
     filenames <- as.character(filenames)
-    names(filenames) <- pipeline$metadata$name[indexes]
+    names(filenames) <- pipeline$metadata$id[indexes]
     
     pipeline$metadata[,"salmon.quant.sf"] <- NA
     pipeline$metadata[indexes,"salmon.quant.sf"] <- filenames
