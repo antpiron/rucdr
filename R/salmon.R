@@ -51,7 +51,7 @@ salmon_process <- function (pipeline, sample)
 
     if (0 != ret)
     {
-        warning( paste0("Salmon returned ", ret, ". Check ", tmp.dir,".") )
+        message( paste0("Salmon returned ", ret, ". Check ", tmp.dir,".") )
         return(NA)
     }
     tmp.quant.sf = file.path(tmp.dir, "quant.sf")
@@ -64,12 +64,18 @@ salmon_process <- function (pipeline, sample)
     }
     message(paste0("====== renaming ", tmp.dir,
                    " to ", salmon.output.dir, "."))
-    ## fail for some reason
+    ## fail because files can be on different filesystems and R sucks
     ## file.rename(tmp.dir, salmon.output.dir)
-    ## TODO: Delete after verification that everything is copied
-    mydir <- file.path(pipeline$option$output.dir, "salmon")
-    file.copy(tmp.dir, mydir, recursive=T)
-    file.rename(file.path(mydir, basename(tmp.dir)), salmon.output.dir)
+    ## TODO: Do something portable
+    ret <- system2("mv", c(tmp.dir, salmon.output.dir), wait = TRUE)
+    if (0 != ret)
+    {
+        message(paste0("Salmon(): mv ",tmp.dir, " ", salmon.output.dir, "returned ", ret))
+        return(NA)
+    }
+    ## mydir <- file.path(pipeline$option$output.dir, "salmon")
+    ## file.copy(tmp.dir, mydir, recursive=T)
+    ## file.rename(file.path(mydir, basename(tmp.dir)), salmon.output.dir)
     
     return(salmon.output.quant.sf)
 }
