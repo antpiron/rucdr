@@ -68,7 +68,7 @@ salmon_process <- function (pipeline, sample)
     ## file.rename(tmp.dir, salmon.output.dir)
     ## TODO: Delete after verification that everything is copied
     mydir <- file.path(pipeline$option$output.dir, "salmon")
-    file.copy(tmp.dir, mydir)
+    file.copy(tmp.dir, mydir, recursive=T)
     file.rename(file.path(mydir, basename(tmp.dir)), salmon.output.dir)
     
     return(salmon.output.quant.sf)
