@@ -22,7 +22,6 @@ deseq2 <- function (pipeline, ...)
 #' @export
 deseq2 <- function (pipeline, design=~condition)
 {
-    
     if (is.null(pipeline$salmon) || is.null(pipeline$salmon$tlast.txi) )
     {
         warning("Have you called salmon()? Doing nothing! No deseq2 call!")
@@ -44,9 +43,12 @@ deseq2 <- function (pipeline, design=~condition)
     dds <- DESeq2::DESeqDataSetFromTximport(txi,
                                             metadata,
                                             design)
-    ## TODO: custom filter because too low expression 
+    ## from filter()
+    if (! is.null(pipeline$metadata.selection) )
+        dds <- dds[,pipeline$metadata.selection$id]
+    ## TODO: custom filter because too low expression
     dds <- dds[ apply(DESeq2::counts(dds), 1,
-                      function (x) sum(x > 5) > 4), ]
+                      function (x) sum(x > 5) > ncol(dds)/2), ]
     dds <- DESeq2::estimateSizeFactors(dds)
     dds <- DESeq2::DESeq(dds, parallel=T)
     

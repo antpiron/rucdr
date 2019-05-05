@@ -70,5 +70,19 @@ test_that("deseq2Results()", {
     expect_true(all(res[transcripts[! ("ENST00000456328" == transcripts)],]$padj > 0.05))
 })
 
+## test filter
+pl <- pl %>% filter(! id %in% c("S1", "S6"))
+
+pl <- pl %>% deseq2()
+test_that("deseq2()", {
+    expect_s3_class(pl, "pipeline")
+})
+
+res <- pl %>% deseq2Results("ctl", "pal")
+test_that("deseq2Results()", {
+    expect_s3_class(res, "data.frame")
+    expect_true(res["ENST00000456328",]$padj < 0.05)
+    expect_true(all(res[transcripts[! ("ENST00000456328" == transcripts)],]$padj > 0.05))
+})
 
 ## TODO: test summarizeSamples

@@ -97,6 +97,12 @@ salmon <- function (pipeline, ...)
 #' @export
 salmon.pipeline <- function (pipeline)
 {
+    if (is.null(pipeline$metadata))
+    {
+        warning("No metadata imported! Nothing to do!")
+        return(pipeline)
+    }
+    
     if (is.null(pipeline$metadata$salmon.quant.sf) &&
         is.null(pipeline$metadata$fastq1))
     {
