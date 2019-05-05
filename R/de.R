@@ -44,9 +44,14 @@ deseq2 <- function (pipeline, design=~condition)
                                             metadata,
                                             design)
     ## from filter()
+    print("=========")
+    print(colnames(dds))
+    print(setdiff(pipeline$metadata.selection$id, colnames(dds)))
     if (! is.null(pipeline$metadata.selection) )
         dds <- dds[,pipeline$metadata.selection$id]
     ## TODO: custom filter because too low expression
+    print("=========")
+    print(colnames(dds))
     dds <- dds[ apply(DESeq2::counts(dds), 1,
                       function (x) sum(x > 5) > ncol(dds)/2), ]
     dds <- DESeq2::estimateSizeFactors(dds)

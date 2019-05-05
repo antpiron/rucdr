@@ -71,6 +71,7 @@ test_that("deseq2Results()", {
 })
 
 ## test filter
+## TODO: better testing
 pl <- pl %>% filter(! id %in% c("S1", "S6"))
 
 pl <- pl %>% deseq2()
