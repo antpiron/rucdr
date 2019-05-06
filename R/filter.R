@@ -22,6 +22,9 @@ filter.pipeline <- function (pipeline, ...)
     
     pipeline$metadata.selection <- pipeline$metadata.selection[
                                                 ! is.na(pipeline$metadata.selection$salmon.quant.sf),]
+
+    cols <- apply( pipeline$metadata.selection, 1, is.factor)
+    pipeline$metadata.selection[, cols]  <-  lapply(pipeline$metadata.selection[, cols], factor)
     ## print("=========================")
     ## print(pipeline$metadata.selection$salmon.quant.sf)
     filenames <- pipeline$metadata.selection[
@@ -29,6 +32,7 @@ filter.pipeline <- function (pipeline, ...)
                                   as.character(pipeline$metadata.selection$salmon.quant.sf)),"salmon.quant.sf"]
     if( length(filenames) > 0)
     {
+
         pipeline$salmon$txi.isoforms <- tximport::tximport(
                                                       filenames,
                                                       type = "salmon", txOut = TRUE,
