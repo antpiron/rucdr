@@ -23,8 +23,8 @@ filter.pipeline <- function (pipeline, ...)
     pipeline$metadata.selection <- pipeline$metadata.selection[
                                                 ! is.na(pipeline$metadata.selection$salmon.quant.sf),]
 
-    cols <- apply( pipeline$metadata.selection, 1, is.factor)
-    pipeline$metadata.selection[, cols]  <-  lapply(pipeline$metadata.selection[, cols], factor)
+    pipeline$metadata.selection <- droplevels( pipeline$metadata.selection)
+    ## print(
     ## print("=========================")
     ## print(pipeline$metadata.selection$salmon.quant.sf)
     filenames <- pipeline$metadata.selection[
