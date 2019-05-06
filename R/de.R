@@ -55,6 +55,9 @@ deseq2 <- function (pipeline, design=~condition)
     dds <- dds[ apply(DESeq2::counts(dds), 1,
                       function (x) sum(x > 5) > ncol(dds)/2), ]
     dds <- DESeq2::estimateSizeFactors(dds)
+    print("=========")
+    print(colnames(dds))
+    print(dim(dds))
     dds <- DESeq2::DESeq(dds, parallel=T)
     
     if (is.null(pipeline$dseq2))
