@@ -5,7 +5,7 @@ salmon_process <- function (pipeline, sample)
 {
     paired <- ! is.null(sample$fastq2) &&  ! is.na(sample$fastq2) && "" != sample$fastq2
     message(paste0('===== salmon ', sample$id))
-    if (! file.exists(sample$fastq1) )
+    if (is.na(sample$fastq1) || is.null(sample$fastq1) || ! file.exists(sample$fastq1) )
     {
         message( paste0("salmon_process(): file ",
                         sample$fastq1, " does not exist") )
@@ -117,7 +117,8 @@ salmon.pipeline <- function (pipeline)
                                {
                                     if ( is.null(pipeline$metadata$fastq1) ||
                                         is.null(pipeline$metadata$fastq1[i]))
-                                   {
+                                    {
+                                        message("Fastq1 is null")
                                        return(as.character(
                                            pipeline$metadata$salmon.quant.sf[i]))
                                    }
@@ -135,9 +136,14 @@ salmon.pipeline <- function (pipeline)
     
     pipeline$metadata[,"salmon.quant.sf"] <- NA
     pipeline$metadata[indexes,"salmon.quant.sf"] <- filenames
-    
-    filenames <- filenames[! is.na(filenames) ]
-    
+    pipeline$metadata.selection <- pipeline$metadata
+    ##filenames <- pipeline$metadata.selection[
+    ##                          file.exists(pipeline$metadata.selection$salmon.quant.sf),]
+
+    fe <- file.exists(pipeline$metadata.selection$salmon.quant.sf)
+    filenames <- pipeline$metadata.selection$salmon.quant.sf[fe]
+    names(filenames) <- pipeline$metadata.selection$id[fe]
+        
     pipeline$salmon = list()
     ##print(filenames)
     if (length(filenames) > 0)

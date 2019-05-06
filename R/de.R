@@ -37,27 +37,26 @@ deseq2 <- function (pipeline, design=~condition)
         return(pipeline)
     }
 
-    metadata <- pipeline$metadata[
-                             ! is.na(pipeline$metadata$salmon.quant.sf),]
+    metadata <- pipeline$metadata.selection
     ## TODO: is metadata corresponding to txi.isoforms columns?
     dds <- DESeq2::DESeqDataSetFromTximport(txi,
                                             metadata,
                                             design)
     ## from filter()
-    print("=========")
-    print(colnames(dds))
-    print(setdiff(pipeline$metadata.selection$id, colnames(dds)))
+    ## print("=========")
+    ## print(colnames(dds))
+    ## print(setdiff(pipeline$metadata.selection$id, colnames(dds)))
     if (! is.null(pipeline$metadata.selection) )
         dds <- dds[,pipeline$metadata.selection$id]
     ## TODO: custom filter because too low expression
-    print("=========")
-    print(colnames(dds))
+    ## print("=========")
+    ## print(colnames(dds))
     dds <- dds[ apply(DESeq2::counts(dds), 1,
                       function (x) sum(x > 5) > ncol(dds)/2), ]
     dds <- DESeq2::estimateSizeFactors(dds)
-    print("=========")
-    print(colnames(dds))
-    print(dim(dds))
+    ## print("=========")
+    ## print(colnames(dds))
+    ## print(dim(dds))
     dds <- DESeq2::DESeq(dds, parallel=T)
     
     if (is.null(pipeline$dseq2))

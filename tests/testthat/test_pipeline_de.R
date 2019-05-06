@@ -12,6 +12,7 @@ sampleTable <- data.frame(salmon.quant.sf=file.path("output",
                           id=paste0("S",1:nsamples),
                           condition=c(rep("ctl", nsamples/2),
                                       rep("pal", nsamples/2)))
+row.names(sampleTable)  <- sampleTable$id
 transcripts <- c("ENST00000456328", "ENST00000450305",
                  "ENST00000473358", "ENST00000469289",
                  "ENST00000607096", "ENST00000606857")
@@ -45,8 +46,10 @@ pl$metadata <- sampleTable
 
 pl <- pl %>% options(gtf="data/test.gtf") %>%  salmon() 
 
-## print(pl$metadata)
-## print(pl$salmon)
+##print(pl$metadata)
+##print("===== metadata.selection")
+##print(pl$metadata.selection)
+##print(pl$salmon)
 
 test_that("salmon()", {
     expect_s3_class(pl, "pipeline")

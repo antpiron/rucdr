@@ -17,7 +17,29 @@ filter <- function (pipeline, ...)
 #' @export
 filter.pipeline <- function (pipeline, ...)
 {
-    pipeline$metadata.selection <- dplyr::filter(pipeline$metadata, ...)
+    pipeline$metadata.selection <- as.data.frame(dplyr::filter(pipeline$metadata, ...))
+    row.names(pipeline$metadata.selection) <- pipeline$metadata.selection$id
+    
+    pipeline$metadata.selection <- pipeline$metadata.selection[
+                                                ! is.na(pipeline$metadata.selection$salmon.quant.sf),]
+    ## print("=========================")
+    ## print(pipeline$metadata.selection$salmon.quant.sf)
+    filenames <- pipeline$metadata.selection[
+                              file.exists(
+                                  as.character(pipeline$metadata.selection$salmon.quant.sf)),"salmon.quant.sf"]
+    if( length(filenames) > 0)
+    {
+        pipeline$salmon$txi.isoforms <- tximport::tximport(
+                                                      filenames,
+                                                      type = "salmon", txOut = TRUE,
+                                                      ignoreTxVersion=T)
+        
+        if ( "genes" == pipeline$salmon$tlast.txi)
+        {
+            pipeline <- salmonGenes(pipeline)
+        }
+    }
+
 
     return(pipeline)
 }
