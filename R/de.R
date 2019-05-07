@@ -80,11 +80,11 @@ deseq2 <- function (pipeline, design=~condition)
 #'     to use as contrast
 #' @param isoforms True if isoforms result (default: NULL)
 #' @export
-deseq2Results  <- function (pipeline, c1, c2, condition="condition", isoforms=NULL)
+deseq2Results  <- function (pipeline, c1, c2, condition="condition", isoforms=NULL, ...)
 {
     isoforms <- if (is.null(isoforms)) "isoforms" == pipeline$salmon$tlast.txi else isoforms
     dds <- if (isoforms) pipeline$dseq2$dds.isoforms else pipeline$dseq2$dds.genes
-    res <- DESeq2::results(dds, contrast=c(condition, c1, c2))
+    res <- DESeq2::results(dds, contrast=c(condition, c1, c2), ...)
     if (isoforms)
     {
         rownames(res)  <- sapply(strsplit(rownames(res),'\\.'),'[',1)

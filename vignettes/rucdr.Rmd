@@ -9,19 +9,50 @@ vignette: >
   \usepackage[utf8]{inputenc}
 ---
 
-```{r}
-df <- data.frame(fastq1=c("S1_R1.tar.gz", "S2_R1.tar.gz"),
-	             fastq2=c("S1_R2.tar.gz", "S2_R2.tar.gz"),
-				 id=c("S1", "S2"),
-				 condition=c("ctl", "pal"))
-df
+# Introduction
+
+The package `rucdr` is pipeline to facilitate omic analysis. The input
+to the pipeline is a tab separated `metadata.tsv` file containing at least
+an column called `id`.
+
+# Synopsis
+
+```{r echo=F}
+metadata <- data.frame(fastq1=paste0("S",1:8,"_R1.fastq.gz"),
+	         fastq2=paste0("S",1:8,"_R2.fastq.gz"),
+		 id=paste0("S", 1:8),
+		 condition=c("ctl", "cond"))
+rownames(metadata) <- metadata$id
 ```
 
-```{r}
-## pipeline() %>% metadata("data/metadata.tsv") %>%
-##     options(
-##         salmon.index="~/data/ensembl/GRCh38/Homo_sapiens.GRCh38.cdna.all.salmon.index",
-##         gtf="~/data/ensembl/GRCh38/Homo_sapiens.GRCh38.95.gtf.gz") %>%
-##     salmon() %>% deseq2() %>% deseq2Results("ctl", "cond")
+Loading the packages
+```{r message=F}
+## magrittr for the `%>%` pipeline operator
+library(magrittr)
+library(rucdr)
+```
+
+The `metadata.tsv` file is formated as
+```{r echo=F, comment=NA}
+metadata
+```
+
+```{r eval=F}
+## definitions for salmon
+salmon.index="/srv/genomic_data/ensembl/GRCh38/Homo_sapiens.GRCh38.cdna.all.salmon.index"
+gtf="/srv/genomic_data/ensembl/GRCh38/Homo_sapiens.GRCh38.95.gtf.gz"
+
+## initialize the pipeline and load the file `data/metadata.tsv`
+pl <- pipeline() %>% metadata("data/metadata.tsv") %>%
+## set options for salmon
+	options(salmon.index=salmon.index, gtf=gtf) %>%
+## Run salmon, deseq2
+	salmon() %>% deseq2()
+
+## get the results from deseq2
+res <- pl %>% deseq2Results("ctl", "cond")
+
+## get top 10
+head(res[order(res$padj),],10)
 
 ```
