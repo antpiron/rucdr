@@ -47,6 +47,7 @@ pl <- pipeline() %>% metadata("data/metadata.tsv") %>%
 ## set options for salmon
 	options(salmon.index=salmon.index, gtf=gtf) %>%
 ## Run salmon, deseq2
+## The salmon output is by default in `output/salmon/`
 	salmon() %>% deseq2()
 
 ## get the results from deseq2
