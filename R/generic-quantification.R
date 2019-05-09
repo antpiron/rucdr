@@ -34,25 +34,8 @@ rnaseq.data.frame <- function (input)
                    })
     names(data) <- input$id
 
-    columns_to_matrix <- function (column)
-    {
-        counts <- Reduce(
-            function (df, quant.sf)
-            {
-                nr <- quant.sf[,c("Name", column)]
-                full_join(df, nr, by = "Name")
-            },
-            data, data.frame(Name=character(), stringsAsFactors=F))   
-        
-        row.names(counts) <- counts$Name
-        counts <- subset(counts, select=-c(Name))
-        colnames(counts) <- input$id
-
-        as.matrix(counts)
-    }
-
-    counts <- columns_to_matrix("NumReads")
-    tpm <- columns_to_matrix("TPM")
+    counts <- lmerge(data, on="Name", col="NumReads", input$id)
+    tpm <- lmerge(data, on="Name", col="TPM", input$id)
     
     structure(list(
         data   = data,
