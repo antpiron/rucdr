@@ -3,23 +3,26 @@
 
 salmon_process <- function (pipeline, sample)
 {
+    message(paste0('===== salmon ', sample$id, " ", sample$fastq1, " ", sample$fastq2))
+
     paired <- ! is.null(sample$fastq2) &&  ! is.na(sample$fastq2) && "" != sample$fastq2
-    message(paste0('===== salmon ', sample$id))
-    if (is.na(sample$fastq1) || is.null(sample$fastq1) || ! file.exists(sample$fastq1) )
+    if (paired)
+        message('===== PAIRED')
+   
+    if (is.na(sample$fastq1) || is.null(sample$fastq1) || ! file.exists(as.character(sample$fastq1)) )
     {
         message( paste0("salmon_process(): file ",
                         sample$fastq1, " does not exist") )
         return(NA)
 
     }
-    if (paired && ! file.exists(sample$fastq2) )
+    if (paired && ! file.exists(as.character(sample$fastq2)) )
     {
         message( paste0("salmon_process(): file ",
                         sample$fastq2, " does not exist") )
         return(NA)
 
     }
-    message('===== PAIRED')
     salmon.output.dir <- file.path(pipeline$option$output.dir, "salmon",
                                    sample$id)
     salmon.output.quant.sf <- file.path(salmon.output.dir, "quant.sf")
@@ -31,7 +34,9 @@ salmon_process <- function (pipeline, sample)
     }
     
     tmp.dir <- tempfile(pattern="salmon-")
+    message('===== Creating tempfile')
     dir.create(tmp.dir)
+    message('===== Tempfile created')
 
     fastq.param <- if (paired) {
                        c("-1", as.character(sample$fastq1),
@@ -47,7 +52,9 @@ salmon_process <- function (pipeline, sample)
                fastq.param,
                "-o", tmp.dir)
 
+    message("===== Running salmon")
     ret <- system2("salmon", param, wait = TRUE)
+    message("===== Salmon finished")
 
     if (0 != ret)
     {
