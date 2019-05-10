@@ -23,25 +23,12 @@ rnaseq.data.frame <- function (input)
 {
     checkColumns(input, c("quant.sf.fn", "id"), .stop=T)
 
-    data <- lapply(input$quant.sf.fn,
-                   function (fn)
-                   {
-                       rt <- read.table(as.character(fn),
-                                        sep= "\t", header = TRUE,
-                                        quote="", fill=T, check.names=F,
-                                        stringsAsFactors=F)
-                       rt
-                   })
-    names(data) <- input$id
-
-    counts <- lmerge(data, on="Name", col="NumReads", input$id)
-    tpm <- lmerge(data, on="Name", col="TPM", input$id)
     
     structure(list(
-        data   = data,
-        counts = counts,
-        tpm    = tpm,
-        rpkm   = matrix(double())
+        data   = NULL,
+        counts = NULL,
+        tpm    = NULL,
+        rpkm   = NULL
         ), class  = c("rnaseq_quantification") )
 }
 
