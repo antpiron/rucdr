@@ -33,7 +33,9 @@ pipeline.metadata <- function (metadata)
 
 pipeline.data.frame <- function (metadata)
 {
+    if (is.null(metadata$id)) { stop("Mandatory `id` column missing.") }
+
     
-    
-    pipeline.metadata(metadata)
+    pipeline(structure(metadata,
+                       class = c("metadata", "data.frame")))
 }
