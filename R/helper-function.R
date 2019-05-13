@@ -55,7 +55,7 @@ lmerge <- function (data, on, col, col.names)
         data, data.frame(Name=character(), stringsAsFactors=F))   
     
     row.names(counts) <- counts[,on]
-    counts <- counts[,-which(colnames(counts) == on )]
+    counts <- counts[,-which(colnames(counts) == on ), drop=FALSE]
     if (! is.null(col.names) )
         colnames(counts) <- col.names
     
@@ -78,8 +78,9 @@ file.move <- function(src, dst)
     ## fail because files can be on different filesystems and R sucks
     ## file.rename(tmp.dir, salmon.output.dir)
     ## TODO: Do something portable
+    dir.create(dirname(dst), recursive=T)
     ret <- system2("mv", c(src, dst), wait = TRUE)
     if (0 != ret)
-        stop(paste0("runSalmon(): mv ", src, " ", dst,
+        stop(paste0("file.move(): mv ", src, " ", dst,
                     " returned ", ret))
 }

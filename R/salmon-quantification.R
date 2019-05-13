@@ -60,13 +60,14 @@ runSalmon <- function (fq1, fq2, id,
     if (! file.exists(tmp.quant.sf) ||
         1000 != length(readLines(file(tmp.quant.sf), n = 1000)))
     {
-        message( paste0("Salmon do not seem to have created the file ",
-                        tmp.quant.sf, ".") )
+        message( paste0("Salmon do not seem to have created the file properly ",
+                        tmp.quant.sf, ". Inexistent or truncated file.") )
         return(NA)
     }
     logging(paste0("'runSalmon(): renaming ", tmp.dir,
                    " to ", outputdir, "."),
             .module="salmon")
+    ## dir.create(dirname(dst), recursive=T)
     file.move(tmp.dir, outputdir)
    
     return(output.quant.sf)
@@ -103,8 +104,8 @@ salmonQuant <- function (metadata, index="", outputdir="output/salmon",
     filenames <- as.character(filenames)
     names(filenames) <- metadata$id[indexes]
     
-    metadata[,"salmon.quant.sf"] <- NA
-    metadata[indexes,"salmon.quant.sf"] <- filenames
+    metadata[,"quant.sf.fn"] <- NA
+    metadata[indexes,"quant.sf.fn"] <- filenames
 
     structure(metadata,
               class  = c("salmon", "data.frame") )
@@ -136,13 +137,17 @@ rnaseq.salmon <- function (input)
 
     counts <- lmerge(data, on="Name", col="NumReads", input$id)
     tpm <- lmerge(data, on="Name", col="TPM", input$id)
+    Length <-  lmerge(data, on="Name",
+                      col="Length", input$id)
     ## TODO: RPKM https://haroldpimentel.wordpress.com/2014/05/08/what-the-fpkm-a-review-rna-seq-expression-units/#highlighter_305629
     
     structure(list(
         data   = data,
         counts = counts,
         tpm    = tpm,
-        rpkm   = matrix(double())
+        rpkm   = matrix(double()),
+        length = Length,
+        effective_length = effective_length
         ), class  = c("rnaseq_quantification") )
 }
 

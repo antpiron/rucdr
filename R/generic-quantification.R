@@ -41,6 +41,10 @@ print.rnaseq_quantification <- function (rnaseq)
     print(head(rnaseq$tpm))
     print("RPKM:")
     print(head(rnaseq$rpkm))          
+    print("Length:")
+    print(head(rnaseq$length))          
+    print("EffectiveLength:")
+    print(head(rnaseq$effective_length))          
 }
 
 ## df <- data.frame(quant.sf.fn=c("/home/apiron/git/bioinfo/ph.d/tools/tiger/output/ensembl-GRCh38-95/ULB-T2D261010/salmon/quant.sf", "/home/apiron/git/bioinfo/ph.d/tools/tiger/output/ensembl-GRCh38-95/ULB-T2D310311/salmon/quant.sf"), id=c("ULB-T2D261010","ULB-T2D310311"))
