@@ -6,9 +6,9 @@ library(magrittr)
 
 set.seed(1)
 nsamples <- 10
-sampleTable <- data.frame(salmon.quant.sf=file.path("output",
-                                                    paste0("S",1:nsamples),
-                                                    "quant.sf"),
+sampleTable <- data.frame(quant.sf.fn=file.path("output",
+                                                paste0("S",1:nsamples),
+                                                "quant.sf"),
                           id=paste0("S",1:nsamples),
                           condition=c(rep("ctl", nsamples/2),
                                       rep("pal", nsamples/2)))
@@ -34,15 +34,15 @@ apply(sampleTable, 1,
            dir.create(dir, recursive=T)
            
            write.table(quant.sf,
-                       file=entry[["salmon.quant.sf"]],
+                       file=entry[["quant.sf.fn"]],
                        row.names=FALSE, quote=FALSE, sep="\t")
        })
 
 on.exit(unlink("output", recursive=T),
         add = TRUE)
 
-pl <- pipeline()
-pl$metadata <- sampleTable
+pl <- sampleTable %>% pipeline()
+## pl$metadata <- sampleTable
 
 pl <- pl %>% options(gtf="data/test.gtf") %>%  salmon() 
 

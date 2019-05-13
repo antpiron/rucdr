@@ -3,8 +3,9 @@ library(rucdr)
 library(magrittr)
 
 
-pl <- pipeline() %>% options(nthreads=1000,
-                             plop="Plop!")
+pl <- data.frame(id=character()) %>%
+    pipeline() %>% options(nthreads=1000,
+                           plop="Plop!")
 
 test_that("pl is a pipeline()", {
     expect_s3_class(pl, "pipeline")

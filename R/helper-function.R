@@ -105,3 +105,9 @@ concat.data.frame <- function(d1, d2) {
 
   return(rbind(d1, d2))
 }
+
+# TODO: Test
+is.not.empty <- function (x)
+{
+    !is.na(x) && !is.null(x) && x != ""
+}

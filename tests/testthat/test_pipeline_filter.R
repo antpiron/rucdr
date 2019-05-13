@@ -4,12 +4,13 @@ library(magrittr)
 
 
 test_that("filter()", {
-    pl <- pipeline()
     
-    pl$metadata <- data.frame(id=c("A","B","C","D"),
+    metadata <- data.frame(id=c("A","B","C","D"),
                               quant.sf.fn=c("A","B","C","D"))
     
-    row.names(pl$metadata) <- pl$metadata$id
+    row.names(metadata) <- metadata$id
+
+    pl <- metadata %>% pipeline()
     
     pl  <- pl %>% filter(id != "B")
     
