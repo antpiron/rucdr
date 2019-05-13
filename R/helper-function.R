@@ -10,7 +10,7 @@ checkAction <- function(flag, .message="", .stop=F, .warning=T)
             stop(.message)
 
         if (.warning)
-            warning(message)
+            warning(.message)
     }
     
     return(flag)
@@ -18,7 +18,7 @@ checkAction <- function(flag, .message="", .stop=F, .warning=T)
 
 checkFile <- function(file, ...)
 {
-    checkAction(! is.na(file) || ! is.null(file) ||  file.exists(file), ...)
+    checkAction( is.character(file) && file.exists(file), ... )
 }
 
 checkCharacter <- function(str, ...)
@@ -46,13 +46,16 @@ checkColumns.data.frame <- function(df, mandatory, .message="", ...)
 
 lmerge <- function (data, on, col, col.names)
 {
+    init <- data.frame()
+    init[,on] <- character(0)
+    init <- as.data.frame(init)
     counts <- Reduce(
         function (df, quant.sf)
         {
-            nr <- quant.sf[,c(on, col)]
+            nr <- quant.sf[,c(on, col), drop=FALSE]
             full_join(df, nr, by = on)
         },
-        data, data.frame(Name=character(), stringsAsFactors=F))   
+        data, init)   
     
     row.names(counts) <- counts[,on]
     counts <- counts[,-which(colnames(counts) == on ), drop=FALSE]
@@ -78,9 +81,27 @@ file.move <- function(src, dst)
     ## fail because files can be on different filesystems and R sucks
     ## file.rename(tmp.dir, salmon.output.dir)
     ## TODO: Do something portable
-    dir.create(dirname(dst), recursive=T)
+    ## dir.create(dirname(dst), recursive=T)
     ret <- system2("mv", c(src, dst), wait = TRUE)
     if (0 != ret)
         stop(paste0("file.move(): mv ", src, " ", dst,
                     " returned ", ret))
+}
+
+concat.data.frame <- function(d1, d2) {
+  d1.names <- colnames(d1)
+  d2.names <- colnames(d2)
+
+  d2.add <- setdiff(d1.names, d2.names)
+  d1.add <- setdiff(d2.names, d1.names)
+
+  if(length(d2.add) > 0) {
+      d2[, d2.add] <- NA
+  }
+
+  if(length(d1.add) > 0) {
+      d1[,d1.add] <- NA
+    }
+
+  return(rbind(d1, d2))
 }

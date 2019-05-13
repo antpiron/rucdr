@@ -1,10 +1,16 @@
 
+pipeline <- function (metadata, ...)
+{
+    UseMethod("pipeline", metadata)
+}
+
+
 #' Initialize the pipeline
 #' 
 #' @param sampleTable A data frame with at least 3 columns
 #'     "fastq1", "name" and "condition"
 #' @export
-pipeline <- function ()
+pipeline.metadata <- function (metadata)
 {
     ncores <- parallel::detectCores(logical = TRUE)
     njobs <- 1
@@ -20,10 +26,14 @@ pipeline <- function ()
     structure(list(option=list(
                        output.dir="output/",
                        njobs=njobs,
-                       nthreads=nthreads)),
+                       nthreads=nthreads),
+                   metadata=metadata),
               class = "pipeline")
 }
 
-
-
-
+pipeline.data.frame <- function (metadata)
+{
+    
+    
+    pipeline.metadata(metadata)
+}

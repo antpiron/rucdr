@@ -60,14 +60,15 @@ runSalmon <- function (fq1, fq2, id,
     if (! file.exists(tmp.quant.sf) ||
         1000 != length(readLines(file(tmp.quant.sf), n = 1000)))
     {
-        message( paste0("Salmon do not seem to have created the file properly ",
-                        tmp.quant.sf, ". Inexistent or truncated file.") )
+        message( paste0(
+            "Salmon do not seem to have created the file properly ",
+            tmp.quant.sf, ". Inexistent or truncated file.") )
         return(NA)
     }
     logging(paste0("'runSalmon(): renaming ", tmp.dir,
                    " to ", outputdir, "."),
             .module="salmon")
-    ## dir.create(dirname(dst), recursive=T)
+    dir.create(outputdir, recursive=T)
     file.move(tmp.dir, outputdir)
    
     return(output.quant.sf)
@@ -78,12 +79,14 @@ salmonQuant <- function (metadata, index="", outputdir="output/salmon",
                          njobs=1, nthreads=4)
 {
     checkColumns(metadata, c("fastq1", "id"), .stop=T)
-    checkCharacter(metadata$fastq1,
-                   .message="salmonQuant(): metadata$fastq1 is not characters.",
-                   .stop=T)
-    checkCharacter(metadata$id,
-                   .message="salmonQuant(): metadata$id is not characters.",
-                   .stop=T)
+    checkCharacter(
+        metadata$fastq1,
+        .message="salmonQuant(): metadata$fastq1 is not characters.",
+        .stop=T)
+    checkCharacter(
+        metadata$id,
+        .message="salmonQuant(): metadata$id is not characters.",
+        .stop=T)
 
     indexes <- 1:nrow(metadata)
     filenames <- parallel::mclapply(
@@ -139,6 +142,8 @@ rnaseq.salmon <- function (input)
     tpm <- lmerge(data, on="Name", col="TPM", input$id)
     Length <-  lmerge(data, on="Name",
                       col="Length", input$id)
+    effective_length <-  lmerge(data, on="Name",
+                               col="EffectiveLength", input$id)
     ## TODO: RPKM https://haroldpimentel.wordpress.com/2014/05/08/what-the-fpkm-a-review-rna-seq-expression-units/#highlighter_305629
     
     structure(list(
