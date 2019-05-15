@@ -1,4 +1,5 @@
 
+#' @export
 pipeline <- function (metadata, ...)
 {
     UseMethod("pipeline", metadata)
@@ -32,6 +33,7 @@ pipeline.metadata <- function (metadata)
               class = "pipeline")
 }
 
+#' @export
 pipeline.data.frame <- function (metadata)
 {
     if (is.null(metadata$id)) { stop("Mandatory `id` column missing.") }
@@ -42,6 +44,7 @@ pipeline.data.frame <- function (metadata)
 }
 
 
+#' @export
 getResultsByClass <- function (pipeline, ...)
 {
     UseMethod("getResultsByClass", pipeline)
@@ -60,11 +63,13 @@ getResultsByClass.pipeline <- function (pipeline,
     
 }
 
+#' @export
 pushResults <- function (pipeline, ...)
 {
     UseMethod("pushResults", pipeline)
 }
 
+#' @export
 pushResults.pipeline <- function (pipeline, res, name=NULL)
 {
     pipeline$results <- append(list(res), pipeline$results)
@@ -75,11 +80,13 @@ pushResults.pipeline <- function (pipeline, res, name=NULL)
 }
 
 
+#' @export
 getResultsByName <- function (pipeline, ...)
 {
     UseMethod("getResultsByName", pipeline)
 }
 
+#' @export
 getResultsByName.pipeline <- function (pipeline,
                                        name="1")
 {

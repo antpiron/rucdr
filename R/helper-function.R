@@ -53,7 +53,7 @@ lmerge <- function (data, on, col, col.names)
         function (df, quant.sf)
         {
             nr <- quant.sf[,c(on, col), drop=FALSE]
-            full_join(df, nr, by = on)
+            dplyr::full_join(df, nr, by = on)
         },
         data, init)   
     
@@ -65,7 +65,7 @@ lmerge <- function (data, on, col, col.names)
     as.matrix(counts)
 }
 
-
+#' @export
 logging <- function (message, .level=0, .module=NULL)
 {
     flag <- is.null(.module) || ! exists("logmodules") || is.null(logmodules) ||
@@ -75,7 +75,7 @@ logging <- function (message, .level=0, .module=NULL)
         message(paste0("Logging: ", message, "\n"))
 }
 
-
+#' @export
 file.move <- function(src, dst)
 {
     ## fail because files can be on different filesystems and R sucks

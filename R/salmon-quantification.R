@@ -1,5 +1,6 @@
 
 
+#' @export
 runSalmon <- function (fq1, fq2, id,
                        outputdir=file.path("output", "salmon", id),
                        nthreads=4,
@@ -50,6 +51,8 @@ runSalmon <- function (fq1, fq2, id,
                fastq.param,
                "-o", tmp.dir)
 
+    logging(paste0("runSalmon() salmon running for ", id),
+            .module="salmon")
     ret <- system2("salmon", param, wait = TRUE)
 
     if (0 != ret)
@@ -77,6 +80,7 @@ runSalmon <- function (fq1, fq2, id,
 }
 
 
+#' @export
 salmonQuant <- function (metadata, index="", outputdir="output/salmon",
                          njobs=1, nthreads=4)
 {
@@ -90,6 +94,7 @@ salmonQuant <- function (metadata, index="", outputdir="output/salmon",
         .message="salmonQuant(): metadata$id is not characters.",
         .stop=T)
 
+    logging("salmonQuant() parallel quantification", .module="salmon")
     indexes <- 1:nrow(metadata)
     filenames <- parallel::mclapply(
                                indexes,
@@ -108,6 +113,8 @@ salmonQuant <- function (metadata, index="", outputdir="output/salmon",
                                mc.cores=njobs,
                                mc.silent=FALSE)
     
+    logging("salmonQuant() parallel quantification finished",
+            .module="salmon")
 
     filenames <- as.character(filenames)
     names(filenames) <- metadata$id[indexes]
@@ -131,7 +138,7 @@ salmonQuant <- function (metadata, index="", outputdir="output/salmon",
 rnaseq.salmon <- function (input)
 {
     checkColumns(input, c("quant.sf.fn", "id"), .stop=T)
-
+    ## print(input)
     data <- lapply(input$quant.sf.fn,
                    function (fn)
                    {
@@ -142,6 +149,9 @@ rnaseq.salmon <- function (input)
                        rt
                    })
     names(data) <- input$id
+
+    logging("rnaseq.salmon(): Merging quant.sf.",
+            .module="salmon")
 
     counts <- lmerge(data, on="Name", col="NumReads", input$id)
     tpm <- lmerge(data, on="Name", col="TPM", input$id)

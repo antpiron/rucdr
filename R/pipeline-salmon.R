@@ -26,18 +26,21 @@ salmon.pipeline <- function (pipeline)
     }
 
     pipeline <- pipeline %>%
-        filter( (is.not.empty(quant.sf.fn) &&
+        filter( (exists("quant.sf.fn") && is.not.empty(quant.sf.fn) &&
                  file.exists(as.character(quant.sf.fn))) ||
                 is.not.empty(fastq1))
     metadata_filtered <-  getFilter(pipeline)
 
-    res <- rnaseq(
-        salmonQuant(metadata_filtered,
-                    index=pipeline$option$salmon.index,
-                    outputdir=file.path(pipeline$option$output.dir,
-                                        "salmon"),
-                    njobs=pipeline$option$njobs,
-                    nthreads=pipeline$option$nthreads))
+    quant <- salmonQuant(metadata_filtered,
+                         index=pipeline$option$salmon.index,
+                         outputdir=file.path(pipeline$option$output.dir,
+                                             "salmon"),
+                         njobs=pipeline$option$njobs,
+                         nthreads=pipeline$option$nthreads)
+    quant <- quant[! is.na(quant$quant.sf.fn),]
+    ## TODO: set quant.sf.fn in metadata
+    
+    res <- rnaseq(quant)
 
     pipeline <- pushResults(pipeline, res)
     
@@ -87,7 +90,11 @@ salmonGenes.pipeline <- function(pipeline)
         counts[,-1]
     }
 
+    logging("salmonGenes.pipeline(): Computing counts.",
+            .module="salmon")
     counts <- sumCounts(isoforms$counts)
+    logging("salmonGenes.pipeline(): Computing tpm.",
+            .module="salmon")
     tpm <- sumCounts(isoforms$tpm)
     ## print(head(genes))
 
@@ -108,7 +115,11 @@ salmonGenes.pipeline <- function(pipeline)
         Length[,-1] 
     }
 
+    logging("salmonGenes.pipeline(): Computing length.",
+            .module="salmon")
     Length <- meanLength(isoforms$length)
+    logging("salmonGenes.pipeline(): Computing effective_length.",
+            .module="salmon")
     effective_length <- meanLength(isoforms$effective_length)
     
     res <- structure(list(

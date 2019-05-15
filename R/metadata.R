@@ -35,6 +35,7 @@ metadata.character <- function (files)
               class = c("metadata", "data.frame"))
 }
 
+#' @export
 metadata.factor <- function(files)
 {
     metadata(as.character(files))

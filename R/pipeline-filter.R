@@ -8,6 +8,7 @@ getFilter <- function (pipeline, ...)
     UseMethod("getFilter", pipeline)
 }
 
+#' @export
 getFilter.pipeline <- function (pipeline, ...)
 {
     if ( is.null(pipeline$metadata.filtered) )
