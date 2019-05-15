@@ -75,7 +75,8 @@ test_that("deseq2()", {
     expect_s3_class(pl, "pipeline")
 })
 
-res <- pl %>% deseq2Results("ctl", "pal")
+pl <- pl %>% deseq2Results("ctl", "pal", name="test")
+res <- pl %>% getResultsByName("test")
 test_that("deseq2Results()", {
     expect_s3_class(res, "data.frame")
     expect_true(res["ENST00000456328",]$padj < 0.05)
@@ -91,7 +92,8 @@ test_that("deseq2()", {
     expect_s3_class(pl, "pipeline")
 })
 
-res <- pl %>% deseq2Results("ctl", "pal")
+pl <- pl %>% deseq2Results("ctl", "pal", name="test2")
+res <- pl %>% getResultsByName("test2")
 test_that("deseq2Results()", {
     expect_s3_class(res, "data.frame")
     expect_true(res["ENST00000456328",]$padj < 0.05)

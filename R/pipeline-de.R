@@ -67,7 +67,8 @@ deseq2 <- function (pipeline, design=~condition)
 #'     to use as contrast
 #' @param isoforms True if isoforms result (default: NULL)
 #' @export
-deseq2Results  <- function (pipeline, c1, c2, condition="condition", isoforms=NULL, ...)
+deseq2Results  <- function (pipeline, c1, c2,
+                            condition="condition", name=NULL, ...)
 {
     dds <- getResultsByClass(pipeline, "DESeqDataSet")
     isoforms <- startsWith(row.names(counts(dds))[1], "ENST")
@@ -82,7 +83,10 @@ deseq2Results  <- function (pipeline, c1, c2, condition="condition", isoforms=NU
         rownames(res) <- res$Row.names
         res <- res[-1]
     }
-    return (res)
+
+    pipeline <- pushResults(pipeline, res, name=name)
+    
+    return (pipeline)
 }
 
 ## pipeline() %>% metadata("data/metadata.tsv") %>%

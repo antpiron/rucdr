@@ -39,7 +39,7 @@ salmon.pipeline <- function (pipeline)
                     njobs=pipeline$option$njobs,
                     nthreads=pipeline$option$nthreads))
 
-    pipeline$results <- append(list(res), pipeline$results)
+    pipeline <- pushResults(pipeline, res)
     
     return(pipeline)
 }
@@ -121,7 +121,7 @@ salmonGenes.pipeline <- function(pipeline)
     ), class  = c("salmon_genes", "rnaseq_quantification") )
 
     
-    pipeline$results <- append(list(res), pipeline$results)
+    pipeline <- pushResults(pipeline, res)
     
     return(pipeline)
 }

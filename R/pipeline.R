@@ -60,4 +60,36 @@ getResultsByClass.pipeline <- function (pipeline,
     
 }
 
+pushResults <- function (pipeline, ...)
+{
+    UseMethod("pushResults", pipeline)
+}
+
+pushResults.pipeline <- function (pipeline, res, name=NULL)
+{
+    pipeline$results <- append(list(res), pipeline$results)
+    if ( ! is.null(name) )
+        names(pipeline$results)[1] <- name
+
+    return(pipeline)
+}
+
+
+getResultsByName <- function (pipeline, ...)
+{
+    UseMethod("getResultsByName", pipeline)
+}
+
+getResultsByName.pipeline <- function (pipeline,
+                                       name="1")
+{
+    pos <- Position(function (x) x == name,
+                    names(pipeline$results))
+
+    if (is.na(pos))
+        NULL
+    else
+       pipeline$results[[pos]]   
+}
+
 

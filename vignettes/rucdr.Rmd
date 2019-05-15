@@ -43,7 +43,7 @@ salmon.index="/srv/genomic_data/ensembl/GRCh38/Homo_sapiens.GRCh38.cdna.all.salm
 gtf="/srv/genomic_data/ensembl/GRCh38/Homo_sapiens.GRCh38.95.gtf.gz"
 
 ## initialize the pipeline and load the file `data/metadata.tsv`
-pl <- pipeline() %>% metadata("data/metadata.tsv") %>%
+pl <- metadata %>% pipeline() %>%
 ## set options for salmon
 	options(salmon.index=salmon.index, gtf=gtf) %>%
 ## Run salmon, deseq2
