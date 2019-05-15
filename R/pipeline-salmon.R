@@ -25,11 +25,11 @@ salmon.pipeline <- function (pipeline)
         return(pipeline)
     }
 
-    metadata_filtered <- pipeline %>%
+    pipeline <- pipeline %>%
         filter( (is.not.empty(quant.sf.fn) &&
                  file.exists(as.character(quant.sf.fn))) ||
-                is.not.empty(fastq1)) %>%
-        getFilter(pipeline)
+                is.not.empty(fastq1))
+    metadata_filtered <-  getFilter(pipeline)
 
     res <- rnaseq(
         salmonQuant(metadata_filtered,
