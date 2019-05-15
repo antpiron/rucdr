@@ -22,50 +22,37 @@ deseq2 <- function (pipeline, ...)
 #' @export
 deseq2 <- function (pipeline, design=~condition)
 {
-    if (is.null(pipeline$salmon) || is.null(pipeline$salmon$tlast.txi) )
+    last.res <- getResultsByClass(pipeline, "rnaseq_quantification")
+    if (is.null(last.res))
     {
         warning("Have you called salmon()? Doing nothing! No deseq2 call!")
         return(pipeline)
     }
 
-    txi <- if ( "isoforms" == pipeline$salmon$tlast.txi ) pipeline$salmon$txi.isoforms else pipeline$salmon$txi.genes
-    
-    if (is.null(txi))
-    {
-        warning(paste0("No txi for", pipeline$salmon$tlast.txi ,
-                       ". Doing nothing! No deseq2 call!"))
-        return(pipeline)
-    }
+    logging("Running DESeqDataSetFromMatrix()", .module="deseq2")
+    metadata <- getFilter(pipeline)
+    inter <- intersect(colnames(last.res$counts), row.names(metadata))
+    counts <- apply(last.res$counts, c(1, 2), as.integer)
+    dds <- DESeq2::DESeqDataSetFromMatrix(
+                       counts,
+                       metadata[inter,, drop=FALSE],
+                       design)
 
-    metadata <- pipeline$metadata.selection
-    ## TODO: is metadata corresponding to txi.isoforms columns?
-    dds <- DESeq2::DESeqDataSetFromTximport(txi,
-                                            metadata,
-                                            design)
-    ## from filter()
-    ## print("=========")
-    ## print(colnames(dds))
-    ## print(setdiff(pipeline$metadata.selection$id, colnames(dds)))
-    if (! is.null(pipeline$metadata.selection) )
-        dds <- dds[,pipeline$metadata.selection$id]
     ## TODO: custom filter because too low expression
-    ## print("=========")
-    ## print(colnames(dds))
     dds <- dds[ apply(DESeq2::counts(dds), 1,
                       function (x) sum(x > 5) > ncol(dds)/2), ]
+    logging("Running estimateSizeFactors()", .module="deseq2")
+    ## TODO: estimateSizeFactorsForMatrix. Necessary ??!?
     dds <- DESeq2::estimateSizeFactors(dds)
-    ## print("=========")
-    ## print(colnames(dds))
-    ## print(dim(dds))
+    ## logging("Running estimateSizeFactorsForMatrix()", .module="deseq2")
+    ## dds <- DESeq2::estimateSizeFactorsForMatrix(
+    ##                    counts(dds)/
+    ##                    last.res$effective_length[, inter, drop=FALSE])
+
+    logging("Running DESeq()", .module="deseq2")
     dds <- DESeq2::DESeq(dds, parallel=T)
-    
-    if (is.null(pipeline$dseq2))
-        pipeline$dseq2 <- list()
-        
-    if ("isoforms" == pipeline$salmon$tlast.txi)
-        pipeline$dseq2$dds.isoforms  <- dds
-    else
-        pipeline$dseq2$dds.genes <- dds
+
+    pipeline$results <- append(list(dds), pipeline$results)
     
     return(pipeline)
 }
@@ -82,12 +69,14 @@ deseq2 <- function (pipeline, design=~condition)
 #' @export
 deseq2Results  <- function (pipeline, c1, c2, condition="condition", isoforms=NULL, ...)
 {
-    isoforms <- if (is.null(isoforms)) "isoforms" == pipeline$salmon$tlast.txi else isoforms
-    dds <- if (isoforms) pipeline$dseq2$dds.isoforms else pipeline$dseq2$dds.genes
+    dds <- getResultsByClass(pipeline, "DESeqDataSet")
+    isoforms <- startsWith(row.names(counts(dds))[1], "ENST")
     res <- DESeq2::results(dds, contrast=c(condition, c1, c2), ...)
     if (isoforms)
     {
-        rownames(res)  <- sapply(strsplit(rownames(res),'\\.'),'[',1)
+        pipeline <- tx2genes(pipeline)
+
+        ##rownames(res)  <- sapply(strsplit(rownames(res),'\\.'),'[',1)
         res <- merge(as.data.frame(res), pipeline$tx2gene,
                      by.x=0, by.y="TXNAME", all.x=T)
         rownames(res) <- res$Row.names

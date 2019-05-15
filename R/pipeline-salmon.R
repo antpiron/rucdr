@@ -118,7 +118,7 @@ salmonGenes.pipeline <- function(pipeline)
         rpkm   = matrix(double()),
         length = Length,
         effective_length = effective_length
-    ), class  = c("salmon_isoforms", "rnaseq_quantification") )
+    ), class  = c("salmon_genes", "rnaseq_quantification") )
 
     
     pipeline$results <- append(list(res), pipeline$results)

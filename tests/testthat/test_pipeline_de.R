@@ -3,7 +3,7 @@ library(rucdr)
 library(magrittr)
 
 
-
+loglevel <- 1
 set.seed(1)
 nsamples <- 10
 dir.create(file.path("output", "salmon"), recursive=T)
@@ -56,15 +56,19 @@ pl <- pl %>% options(gtf="data/test.gtf") %>%  salmon()
 ##print(pl$metadata.selection)
 ##print(pl$salmon)
 
+isoforms <- getResultsByClass(pl, .class = "salmon_isoforms")
+
 test_that("salmon()", {
     expect_s3_class(pl, "pipeline")
-    expect_true(!is.null(pl$salmon$txi.isoforms))
-    expect_equal(dim(pl$salmon$txi.isoforms$counts),
+    expect_true(!is.null(isoforms))
+    expect_equal(dim(isoforms$counts),
                  c(length(transcripts), nrow(sampleTable)))
-    expect_equal(colnames(pl$salmon$txi.isoforms$counts),
+    expect_equal(colnames(isoforms$counts),
                  as.character(sampleTable$id))
 })
 
+## print("====== before deseq2")
+## print(isoforms$counts)
 
 pl <- pl %>% deseq2()
 test_that("deseq2()", {
@@ -80,7 +84,7 @@ test_that("deseq2Results()", {
 
 ## test filter
 ## TODO: better testing
-pl <- pl %>% filter(! id %in% c("S1", "S6"))
+pl <- pl %>% filter(! id %in% c("S1", "S6")) %>% salmon()
 
 pl <- pl %>% deseq2()
 test_that("deseq2()", {
@@ -94,4 +98,20 @@ test_that("deseq2Results()", {
     expect_true(all(res[transcripts[! ("ENST00000456328" == transcripts)],]$padj > 0.05))
 })
 
-## TODO: test summarizeSamples
+## Summarize by genes
+pl <- sampleTable %>% pipeline() %>%
+    options(gtf="data/test.gtf") %>%
+    salmonGenes()
+genes <- getResultsByClass(pl, .class = "salmon_genes")
+test_that("salmonGenes()", {
+    expect_s3_class(pl, "pipeline")
+    expect_true(!is.null(genes))
+    expect_s3_class(genes, "salmon_genes")
+    ## expect_equal(dim(isoforms$counts),
+    ##              c(length(transcripts), nrow(sampleTable)))
+    expect_equal(colnames(genes$counts),
+                 as.character(sampleTable$id))
+})
+
+
+
