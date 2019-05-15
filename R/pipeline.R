@@ -27,7 +27,8 @@ pipeline.metadata <- function (metadata)
                        output.dir="output/",
                        njobs=njobs,
                        nthreads=nthreads),
-                   metadata=metadata),
+                   metadata=metadata,
+                   results=list()),
               class = "pipeline")
 }
 
@@ -39,3 +40,24 @@ pipeline.data.frame <- function (metadata)
     pipeline(structure(metadata,
                        class = c("metadata", "data.frame")))
 }
+
+
+getResultsByClass <- function (pipeline, ...)
+{
+    UseMethod("getResultsByClass", pipeline)
+}
+
+getResultsByClass.pipeline <- function (pipeline,
+                                        .class="rnaseq_quantification")
+{
+    pos <- Position(function (x) is(x, .class),
+                    pipeline$results)
+
+    if (is.na(pos))
+        NULL
+    else
+       pipeline$results[[pos]] 
+    
+}
+
+

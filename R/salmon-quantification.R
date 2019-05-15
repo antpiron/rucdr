@@ -7,7 +7,21 @@ runSalmon <- function (fq1, fq2, id,
 {
     logging(paste0("runSalmon() for ", id), .module="salmon")
 
+    output.quant.sf <- file.path(outputdir, "quant.sf")
+    logging(paste0("runSalmon()  output.quant.sf = ", output.quant.sf),
+            .module="salmon")
+    if (file.exists(output.quant.sf))
+    {
+        logging(paste0('runSalmon(): ', output.quant.sf,
+                       " already exists."),
+                .module="salmon")
+        return(output.quant.sf)
+    }
+    
     paired <- ! is.null(fq2) &&  ! is.na(fq2) && "" != fq2
+    if (paired)
+        logging(paste0("runSalmon(): ", id, " is paired."),
+                .module="salmon")
     
     if (! checkFile(fq1,
                     .message=paste0("runSalmon(): fastq1 ",
@@ -18,19 +32,7 @@ runSalmon <- function (fq1, fq2, id,
                               .message=paste0("runSalmon(): fastq2 ",
                                               fq2, " does not exist")) )
         return(NA)
-        
-    logging(paste0("runSalmon(): ", id, " is paired."),
-            .module="salmon")
-    output.quant.sf <- file.path(outputdir, "quant.sf")
-
-    if (file.exists(output.quant.sf))
-    {
-        logging(paste0('runSalmon(): ', output.quant.sf,
-                       " already exists."),
-                .module="salmon")
-        return(output.quant.sf)
-    }
-    
+           
     tmp.dir <- tempfile(pattern="salmon-")
     dir.create(tmp.dir)
 
@@ -94,8 +96,11 @@ salmonQuant <- function (metadata, index="", outputdir="output/salmon",
                                function (i)
                                {                                  
                                    as.character(runSalmon(
-                                       metadata$fastq1, metadata$fastq2,
-                                       metadata$id,
+                                       metadata$fastq1[i],
+                                       metadata$fastq2[i],
+                                       metadata$id[i],
+                                       outputdir=file.path(outputdir,
+                                                           metadata$id[i]),
                                        nthreads=nthreads,
                                        index=index
                                    ))
@@ -153,7 +158,7 @@ rnaseq.salmon <- function (input)
         rpkm   = matrix(double()),
         length = Length,
         effective_length = effective_length
-        ), class  = c("rnaseq_quantification") )
+        ), class  = c("salmon_isoforms", "rnaseq_quantification") )
 }
 
 

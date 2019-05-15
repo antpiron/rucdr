@@ -31,8 +31,16 @@ salmon.pipeline <- function (pipeline)
                 is.not.empty(fastq1)) %>%
         getFilter(pipeline)
 
-    rnaseq(salmonQuant(metadata_filtered))
+    res <- rnaseq(
+        salmonQuant(metadata_filtered,
+                    index=pipeline$option$salmon.index,
+                    outputdir=file.path(pipeline$option$output.dir,
+                                        "salmon"),
+                    njobs=pipeline$option$njobs,
+                    nthreads=pipeline$option$nthreads))
 
+    pipeline$results <- append(list(res), pipeline$results)
+    
     return(pipeline)
 }
 
@@ -53,20 +61,67 @@ salmonGenes <- function (pipeline, ...)
 #' @export
 salmonGenes.pipeline <- function(pipeline)
 {
-    if (is.null(pipeline$salmon))
-        pipeline <- salmon(pipeline)
-
-    if (is.null(pipeline$salmon$txi.isoforms))
+    isoforms <- getResultsByClass(pipeline, .class = "salmon_isoforms")
+    if (is.null(isoforms))
     {
-        warning("No pipeline$salmon$txi.isoforms")
-        return(pipeline)
+        logging("salmonGenes.pipeline(): No isoforms. Running salmon().",
+                .module="salmon")
+        pipeline <- salmon(pipeline)
+        isoforms <- getResultsByClass(pipeline,
+                                      .class = "salmon_isoforms")
     }
-    
-    pipeline$salmon$txi.genes  <- tximport::summarizeToGene(
-                                                pipeline$salmon$txi.isoforms,
-                                                pipeline$tx2gene,
-                                                ignoreTxVersion=T)
-    pipeline$salmon$tlast.txi <- "genes"
+    if (is.null(isoforms))
+        stop("salmonGenes.pipeline(): isoforms not found.")
 
+    pipeline <- tx2genes(pipeline)
+
+    rn <- gsub('\\.[0-9]*$', '',
+               row.names(isoforms$counts))
+    toGenesID <- pipeline$tx2gene[rn,"GENEID"]
+    ## print(head(toGenesID))
+
+    sumCounts <- function (counts)
+    {
+        counts <- aggregate(counts, data.frame(toGenesID), sum)
+        row.names(counts) <- counts$toGenesID
+        counts[,-1]
+    }
+
+    counts <- sumCounts(isoforms$counts)
+    tpm <- sumCounts(isoforms$tpm)
+    ## print(head(genes))
+
+    meanLength <- function(.length)
+    {
+        nr <- nrow(isoforms$counts)
+        nc <- ncol(isoforms$counts)
+        mat <- matrix(rep(1:nr, nc), nrow=nr)
+        colnames(mat) <- colnames(isoforms$counts)
+        Length <- aggregate(mat,
+                            data.frame(toGenesID),
+                            function(x)
+                            {
+                                weighted.mean(.length[x,],
+                                              isoforms$counts[x,])
+                            })
+        row.names(Length) <- Length$toGenesID
+        Length[,-1] 
+    }
+
+    Length <- meanLength(isoforms$length)
+    effective_length <- meanLength(isoforms$effective_length)
+    
+    res <- structure(list(
+        data   = isoforms$data,
+        counts = counts,
+        tpm    = tpm,
+        rpkm   = matrix(double()),
+        length = Length,
+        effective_length = effective_length
+    ), class  = c("salmon_isoforms", "rnaseq_quantification") )
+
+    
+    pipeline$results <- append(list(res), pipeline$results)
+    
     return(pipeline)
 }

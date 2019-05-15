@@ -72,7 +72,7 @@ logging <- function (message, .level=0, .module=NULL)
         (exists("logmodules") && .module %in% logmodules)
     
     if ( exists("loglevel") && .level < loglevel && flag)
-        message(paste0("Logging: ", message))
+        message(paste0("Logging: ", message, "\n"))
 }
 
 

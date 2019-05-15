@@ -6,12 +6,17 @@ library(magrittr)
 
 set.seed(1)
 nsamples <- 10
-sampleTable <- data.frame(quant.sf.fn=file.path("output",
+dir.create(file.path("output", "salmon"), recursive=T)
+sampleTable <- data.frame(quant.sf.fn=file.path("output", "salmon",
                                                 paste0("S",1:nsamples),
                                                 "quant.sf"),
+                          fastq1=file.path("output", "salmon",
+                                           paste0("S",1:nsamples,
+                                                  "_R1.fastq.gz")),
                           id=paste0("S",1:nsamples),
                           condition=c(rep("ctl", nsamples/2),
-                                      rep("pal", nsamples/2)))
+                                      rep("pal", nsamples/2)),
+                          stringsAsFactors=F)
 row.names(sampleTable)  <- sampleTable$id
 transcripts <- c("ENST00000456328", "ENST00000450305",
                  "ENST00000473358", "ENST00000469289",
@@ -30,7 +35,7 @@ apply(sampleTable, 1,
            quant.sf$TPM  <- quant.sf$TPM * 1E6 / sum(quant.sf$TPM)
            quant.sf$NumReads  <- quant.sf$TPM * 100
 
-           dir=file.path("output", entry[["id"]])
+           dir=file.path("output", "salmon", entry[["id"]])
            dir.create(dir, recursive=T)
            
            write.table(quant.sf,
