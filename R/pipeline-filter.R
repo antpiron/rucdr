@@ -17,6 +17,17 @@ getFilter.pipeline <- function (pipeline, ...)
         pipeline$metadata.filtered
 }
 
+#' @export
+"getFilter<-" <- function(pipeline, value)
+{
+    
+    if ( is.null(pipeline$metadata.filtered) )
+        pipeline$metadata <- value
+    else
+        pipeline$metadata.filtered <- value
+    pipeline
+}
+
 
 #' Filter the metadata rows
 #' 

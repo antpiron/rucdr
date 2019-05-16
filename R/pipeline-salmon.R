@@ -37,10 +37,11 @@ salmon.pipeline <- function (pipeline)
                                              "salmon"),
                          njobs=pipeline$option$njobs,
                          nthreads=pipeline$option$nthreads)
+    ## TODO: test this
+    getFilter(pipeline)$quant.sf.fn <- quant$quant.sf.fn
     quant <- quant[! is.na(quant$quant.sf.fn),]
-    ## TODO: set quant.sf.fn in metadata
-    
-    res <- rnaseq(quant)
+   
+    res <- rnaseq(quant, nthreads=pipeline$option$nthreads)
 
     pipeline <- pushResults(pipeline, res)
     
@@ -64,6 +65,8 @@ salmonGenes <- function (pipeline, ...)
 #' @export
 salmonGenes.pipeline <- function(pipeline)
 {
+    logging("salmonGenes.pipeline(): start.",
+            .module="salmon")
     isoforms <- getResultsByClass(pipeline, .class = "salmon_isoforms")
     if (is.null(isoforms))
     {
@@ -89,15 +92,6 @@ salmonGenes.pipeline <- function(pipeline)
         row.names(counts) <- counts$toGenesID
         counts[,-1]
     }
-
-    logging("salmonGenes.pipeline(): Computing counts.",
-            .module="salmon")
-    counts <- sumCounts(isoforms$counts)
-    logging("salmonGenes.pipeline(): Computing tpm.",
-            .module="salmon")
-    tpm <- sumCounts(isoforms$tpm)
-    ## print(head(genes))
-
     meanLength <- function(.length)
     {
         nr <- nrow(isoforms$counts)
@@ -115,23 +109,32 @@ salmonGenes.pipeline <- function(pipeline)
         Length[,-1] 
     }
 
-    logging("salmonGenes.pipeline(): Computing length.",
+    logging("salmonGenes.pipeline(): generating counts/tpm/length/effective_length.",
             .module="salmon")
-    Length <- meanLength(isoforms$length)
-    logging("salmonGenes.pipeline(): Computing effective_length.",
+    ToDoList <- list(isoforms$counts, isoforms$tpm,
+                     isoforms$length, isoforms$effective_length)
+    listCounts <- parallel::mclapply(1:4,
+                                function(i)
+                                    if (i <= 2)
+                                        sumCounts(ToDoList[[i]])
+                                    else
+                                        meanLength(ToDoList[[i]]),
+                                mc.cores=pipeline$option$nthreads)
+    logging("salmonGenes.pipeline(): generating counts/tpm/length/effective_length finished.",
             .module="salmon")
-    effective_length <- meanLength(isoforms$effective_length)
-    
+   
     res <- structure(list(
         data   = isoforms$data,
-        counts = counts,
-        tpm    = tpm,
+        counts = listCounts[[1]],
+        tpm    = listCounts[[2]],
         rpkm   = matrix(double()),
-        length = Length,
-        effective_length = effective_length
+        length = listCounts[[3]],
+        effective_length = listCounts[[4]]
     ), class  = c("salmon_genes", "rnaseq_quantification") )
 
     
+    logging("salmonGenes.pipeline(): pushing results.",
+            .module="salmon")
     pipeline <- pushResults(pipeline, res)
     
     return(pipeline)

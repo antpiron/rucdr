@@ -135,11 +135,11 @@ salmonQuant <- function (metadata, index="", outputdir="output/salmon",
 #' @return An `rnaseq_quantification` S3 object with members
 #'    $counts, $tpm, $rpkm. 
 #' @export
-rnaseq.salmon <- function (input)
+rnaseq.salmon <- function (input, nthreads=4)
 {
     checkColumns(input, c("quant.sf.fn", "id"), .stop=T)
     ## print(input)
-    data <- lapply(input$quant.sf.fn,
+    data <- parallel::mclapply(input$quant.sf.fn,
                    function (fn)
                    {
                        rt <- read.table(as.character(fn),
@@ -147,18 +147,24 @@ rnaseq.salmon <- function (input)
                                         quote="", fill=T, check.names=F,
                                         stringsAsFactors=F)
                        rt
-                   })
+                   },
+                   mc.cores=nthreads)
     names(data) <- input$id
 
     logging("rnaseq.salmon(): Merging quant.sf.",
             .module="salmon")
 
-    counts <- lmerge(data, on="Name", col="NumReads", input$id)
-    tpm <- lmerge(data, on="Name", col="TPM", input$id)
-    Length <-  lmerge(data, on="Name",
-                      col="Length", input$id)
-    effective_length <-  lmerge(data, on="Name",
-                               col="EffectiveLength", input$id)
+    listCounts <- parallel::mclapply(
+                                list("NumReads", "TPM",
+                                     "Length", "EffectiveLength"),
+                                function (col)
+                                    lmerge(data, on="Name", col=col,
+                                           input$id),
+                                mc.cores=nthreads)
+    counts <- listCounts[[1]]
+    tpm <- listCounts[[2]]
+    Length <-  listCounts[[3]]
+    effective_length <-  listCounts[[4]]
     ## TODO: RPKM https://haroldpimentel.wordpress.com/2014/05/08/what-the-fpkm-a-review-rna-seq-expression-units/#highlighter_305629
     
     structure(list(
