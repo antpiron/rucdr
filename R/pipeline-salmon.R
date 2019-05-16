@@ -37,7 +37,7 @@ salmon.pipeline <- function (pipeline)
                                              "salmon"),
                          njobs=pipeline$option$njobs,
                          nthreads=pipeline$option$nthreads)
-    ## TODO: test this
+    ## TODO: fix filtering. Set metadata.
     getFilter(pipeline)$quant.sf.fn <- quant$quant.sf.fn
     quant <- quant[! is.na(quant$quant.sf.fn),]
    
