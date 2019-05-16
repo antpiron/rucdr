@@ -34,7 +34,7 @@ deseq2 <- function (pipeline, design=~condition)
     inter <- intersect(colnames(last.res$counts), row.names(metadata))
     counts <- apply(last.res$counts, c(1, 2), as.integer)
     dds <- DESeq2::DESeqDataSetFromMatrix(
-                       counts,
+                       counts[,inter, drop=FALSE],
                        metadata[inter,, drop=FALSE],
                        design)
 

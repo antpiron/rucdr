@@ -39,6 +39,9 @@ salmon.pipeline <- function (pipeline)
                          nthreads=pipeline$option$nthreads)
     ## TODO: fix filtering. Set metadata.
     getFilter(pipeline)$quant.sf.fn <- quant$quant.sf.fn
+    if (is.null(pipeline$metadata$quant.sf.fn))
+        pipeline$metadata$quant.sf.fn <- NA
+    pipeline$metadata[quant$id, "quant.sf.fn"] <- quant$quant.sf.fn
     quant <- quant[! is.na(quant$quant.sf.fn),]
    
     res <- rnaseq(quant, nthreads=pipeline$option$nthreads)

@@ -50,6 +50,7 @@ getResultsByClass <- function (pipeline, ...)
     UseMethod("getResultsByClass", pipeline)
 }
 
+#' @export
 getResultsByClass.pipeline <- function (pipeline,
                                         .class="rnaseq_quantification")
 {
