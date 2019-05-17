@@ -50,6 +50,7 @@ deseq2 <- function (pipeline, design=~condition)
     dds <- dds[idx, ]
 
     logging("Running DESeq()", .module="deseq2")
+    BiocParallel::register(BiocParallel::MulticoreParam(pipeline$option$nthreads))
     dds <- DESeq2::DESeq(dds, parallel=TRUE)
 
     pipeline$results <- append(list(dds), pipeline$results)
