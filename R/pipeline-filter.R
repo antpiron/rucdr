@@ -28,6 +28,17 @@ getFilter.pipeline <- function (pipeline, ...)
     pipeline
 }
 
+#' @export
+unFilter <- function (pipeline, ...)
+{
+    UseMethod("unFilter", pipeline)
+}
+
+#' @export
+unFilter.pipeline <- function (pipeline)
+{
+    pipeline$metadata.filtered <- NULL
+}
 
 #' Filter the metadata rows
 #' 
@@ -42,11 +53,12 @@ filter <- function (pipeline, ...)
 #' Filter the metadata using dplyr filter
 #' 
 #' @param pipeline A pipeline object
+#' @param unfiltered 
 #' @rdname filter
 #' @export
-filter.pipeline <- function (pipeline, ...)
+filter.pipeline <- function (pipeline, ..., unfiltered=FALSE)
 {
-    metadata.filtered <- getFilter(pipeline)
+    metadata.filtered <- if (unfiltered) pipeline$metadata else getFilter(pipeline)
     pipeline$metadata.filtered <- subset(metadata.filtered, ...)
     
 

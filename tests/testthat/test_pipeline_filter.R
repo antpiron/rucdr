@@ -19,4 +19,9 @@ test_that("filter()", {
     expect_true(! "B" %in%  pl$metadata.filtered$id)
     expect_true(all(pl$metadata.filtered$id ==
                     row.names(pl$metadata.filtered)))
+
+    pl  <- pl %>% filter(id != "A", unfiltered=T)
+
+    expect_true("B" %in%  pl$metadata.filtered$id)
+    expect_true(! "A" %in%  pl$metadata.filtered$id)
 })

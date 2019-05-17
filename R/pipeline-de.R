@@ -38,9 +38,6 @@ deseq2 <- function (pipeline, design=~condition)
                        metadata[inter,, drop=FALSE],
                        design)
 
-    ## TODO: custom filter because too low expression
-    dds <- dds[ apply(DESeq2::counts(dds), 1,
-                      function (x) sum(x > 5) > ncol(dds)/2), ]
     logging("Running estimateSizeFactors()", .module="deseq2")
     ## TODO: estimateSizeFactorsForMatrix. Necessary ??!?
     dds <- DESeq2::estimateSizeFactors(dds)
@@ -48,9 +45,12 @@ deseq2 <- function (pipeline, design=~condition)
     ## dds <- DESeq2::estimateSizeFactorsForMatrix(
     ##                    counts(dds)/
     ##                    last.res$effective_length[, inter, drop=FALSE])
+    ## TODO: custom filter because too low expression
+    idx <- rowSums(DESeq2::counts(dds, normalized=TRUE) >= 5 ) >= ncol(DESeq2::counts(dds))/2
+    dds <- dds[idx, ]
 
     logging("Running DESeq()", .module="deseq2")
-    dds <- DESeq2::DESeq(dds, parallel=T)
+    dds <- DESeq2::DESeq(dds, parallel=TRUE)
 
     pipeline$results <- append(list(dds), pipeline$results)
     
@@ -70,6 +70,7 @@ deseq2 <- function (pipeline, design=~condition)
 deseq2Results  <- function (pipeline, c1, c2,
                             condition="condition", name=NULL, ...)
 {
+    logging("Running deseq2Results()", .module="deseq2")
     dds <- getResultsByClass(pipeline, "DESeqDataSet")
     isoforms <- startsWith(row.names(counts(dds))[1], "ENST")
     res <- DESeq2::results(dds, contrast=c(condition, c1, c2), ...)
