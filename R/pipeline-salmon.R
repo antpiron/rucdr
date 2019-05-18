@@ -44,7 +44,7 @@ salmon.pipeline <- function (pipeline)
     pipeline$metadata[quant$id, "quant.sf.fn"] <- quant$quant.sf.fn
     quant <- quant[! is.na(quant$quant.sf.fn),]
    
-    res <- rnaseq(quant, nthreads=pipeline$option$nthreads)
+    res <- rnaseq(quant)
 
     pipeline <- pushResults(pipeline, res)
     
@@ -82,57 +82,13 @@ salmonGenes.pipeline <- function(pipeline)
     if (is.null(isoforms))
         stop("salmonGenes.pipeline(): isoforms not found.")
 
-    pipeline <- tx2genes(pipeline)
-
-    rn <- gsub('\\.[0-9]*$', '',
-               row.names(isoforms$counts))
-    toGenesID <- pipeline$tx2gene[rn,"GENEID"]
-    ## print(head(toGenesID))
-
-    sumCounts <- function (counts)
-    {
-        counts <- aggregate(counts, data.frame(toGenesID), sum)
-        row.names(counts) <- counts$toGenesID
-        counts[,-1]
-    }
-    meanLength <- function(.length)
-    {
-        nr <- nrow(isoforms$counts)
-        nc <- ncol(isoforms$counts)
-        mat <- matrix(rep(1:nr, nc), nrow=nr)
-        colnames(mat) <- colnames(isoforms$counts)
-        Length <- aggregate(mat,
-                            data.frame(toGenesID),
-                            function(x)
-                            {
-                                weighted.mean(.length[x,],
-                                              isoforms$counts[x,])
-                            })
-        row.names(Length) <- Length$toGenesID
-        Length[,-1] 
-    }
-
-    logging("salmonGenes.pipeline(): generating counts/tpm/length/effective_length.",
-            .module="salmon")
-    ToDoList <- list(isoforms$counts, isoforms$tpm,
-                     isoforms$length, isoforms$effective_length)
-    listCounts <- parallel::mclapply(1:4,
-                                function(i)
-                                    if (i <= 2)
-                                        sumCounts(ToDoList[[i]])
-                                    else
-                                        meanLength(ToDoList[[i]]),
-                                mc.cores=pipeline$option$nthreads)
-    logging("salmonGenes.pipeline(): generating counts/tpm/length/effective_length finished.",
-            .module="salmon")
-   
+    txi <- tximport::summarizeToGene(
+                         isoforms$txi,
+                         pipeline$tx2gene,
+                         ignoreTxVersion=T)
+    
     res <- structure(list(
-        data   = isoforms$data,
-        counts = listCounts[[1]],
-        tpm    = listCounts[[2]],
-        rpkm   = matrix(double()),
-        length = listCounts[[3]],
-        effective_length = listCounts[[4]]
+        txi   = txi
     ), class  = c("salmon_genes", "rnaseq_quantification") )
 
     

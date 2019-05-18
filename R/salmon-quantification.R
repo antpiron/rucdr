@@ -139,41 +139,15 @@ rnaseq.salmon <- function (input, nthreads=4)
 {
     checkColumns(input, c("quant.sf.fn", "id"), .stop=T)
     ## print(input)
-    data <- parallel::mclapply(input$quant.sf.fn,
-                   function (fn)
-                   {
-                       rt <- read.table(as.character(fn),
-                                        sep= "\t", header = TRUE,
-                                        quote="", fill=T, check.names=F,
-                                        stringsAsFactors=F)
-                       rt
-                   },
-                   mc.cores=nthreads)
-    names(data) <- input$id
-
-    logging("rnaseq.salmon(): Merging quant.sf.",
+    logging("rnaseq.salmon(): Loading quant.sf in txi object.",
             .module="salmon")
-
-    listCounts <- parallel::mclapply(
-                                list("NumReads", "TPM",
-                                     "Length", "EffectiveLength"),
-                                function (col)
-                                    lmerge(data, on="Name", col=col,
-                                           input$id),
-                                mc.cores=nthreads)
-    counts <- listCounts[[1]]
-    tpm <- listCounts[[2]]
-    Length <-  listCounts[[3]]
-    effective_length <-  listCounts[[4]]
-    ## TODO: RPKM https://haroldpimentel.wordpress.com/2014/05/08/what-the-fpkm-a-review-rna-seq-expression-units/#highlighter_305629
-    
+    filenames <- input$quant.sf.fn
+    names(filenames) <- input$id
+    txi.tx <-  tximport::tximport(filenames, type = "salmon",
+                                  txOut = TRUE, ignoreTxVersion=T)
+     
     structure(list(
-        data   = data,
-        counts = counts,
-        tpm    = tpm,
-        rpkm   = matrix(double()),
-        length = Length,
-        effective_length = effective_length
+        txi = txi.tx,
         ), class  = c("salmon_isoforms", "rnaseq_quantification") )
 }
 

@@ -29,22 +29,21 @@ deseq2 <- function (pipeline, design=~condition)
         return(pipeline)
     }
 
+    txi  <- last.res$txi
+    
     logging("Running DESeqDataSetFromMatrix()", .module="deseq2")
     metadata <- getFilter(pipeline)
-    inter <- intersect(colnames(last.res$counts), row.names(metadata))
-    counts <- apply(last.res$counts, c(1, 2), as.integer)
-    dds <- DESeq2::DESeqDataSetFromMatrix(
-                       counts[,inter, drop=FALSE],
-                       metadata[inter,, drop=FALSE],
-                       design)
+    inter <- intersect(colnames(Counts(txi)), row.names(metadata))
 
+    txi.filtered <- lapply(txi, function(x) if(is.matrix(x)) return(x[,inter]) else return(x))
+    logging("Running DESeqDataSetFromTximport()", .module="deseq2")
+    dds <- DESeq2::DESeqDataSetFromTximport(txi.filtered,
+                                            metadata[inter,, drop=FALSE],
+                                            design)
+ 
     logging("Running estimateSizeFactors()", .module="deseq2")
     ## TODO: estimateSizeFactorsForMatrix. Necessary ??!?
     dds <- DESeq2::estimateSizeFactors(dds)
-    ## logging("Running estimateSizeFactorsForMatrix()", .module="deseq2")
-    ## dds <- DESeq2::estimateSizeFactorsForMatrix(
-    ##                    counts(dds)/
-    ##                    last.res$effective_length[, inter, drop=FALSE])
     ## TODO: custom filter because too low expression
     idx <- rowSums(DESeq2::counts(dds, normalized=TRUE) >= 5 ) >= ncol(DESeq2::counts(dds))/2
     dds <- dds[idx, ]
