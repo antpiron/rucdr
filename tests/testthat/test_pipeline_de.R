@@ -61,9 +61,9 @@ isoforms <- getResultsByClass(pl, .class = "salmon_isoforms")
 test_that("salmon()", {
     expect_s3_class(pl, "pipeline")
     expect_true(!is.null(isoforms))
-    expect_equal(dim(isoforms$counts),
+    expect_equal(dim(isoforms$txi$counts),
                  c(length(transcripts), nrow(sampleTable)))
-    expect_equal(colnames(isoforms$counts),
+    expect_equal(colnames(isoforms$txi$counts),
                  as.character(sampleTable$id))
 })
 
@@ -111,7 +111,7 @@ test_that("salmonGenes()", {
     expect_s3_class(genes, "salmon_genes")
     ## expect_equal(dim(isoforms$counts),
     ##              c(length(transcripts), nrow(sampleTable)))
-    expect_equal(colnames(genes$counts),
+    expect_equal(colnames(genes$txi$counts),
                  as.character(sampleTable$id))
 })
 

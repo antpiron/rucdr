@@ -143,11 +143,11 @@ rnaseq.salmon <- function (input, nthreads=4)
             .module="salmon")
     filenames <- input$quant.sf.fn
     names(filenames) <- input$id
-    txi.tx <-  tximport::tximport(filenames, type = "salmon",
-                                  txOut = TRUE, ignoreTxVersion=T)
+    txi.tx <- tximport::tximport(filenames, type = "salmon",
+                                 txOut = TRUE, ignoreTxVersion=T)
      
     structure(list(
-        txi = txi.tx,
+        txi = txi.tx
         ), class  = c("salmon_isoforms", "rnaseq_quantification") )
 }
 

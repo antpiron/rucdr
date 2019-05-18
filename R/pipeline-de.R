@@ -33,7 +33,7 @@ deseq2 <- function (pipeline, design=~condition)
     
     logging("Running DESeqDataSetFromMatrix()", .module="deseq2")
     metadata <- getFilter(pipeline)
-    inter <- intersect(colnames(Counts(txi)), row.names(metadata))
+    inter <- intersect(colnames(txi$counts), row.names(metadata))
 
     txi.filtered <- lapply(txi, function(x) if(is.matrix(x)) return(x[,inter]) else return(x))
     logging("Running DESeqDataSetFromTximport()", .module="deseq2")

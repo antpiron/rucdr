@@ -81,7 +81,7 @@ salmonGenes.pipeline <- function(pipeline)
     }
     if (is.null(isoforms))
         stop("salmonGenes.pipeline(): isoforms not found.")
-
+    pipeline <- tx2genes(pipeline)
     txi <- tximport::summarizeToGene(
                          isoforms$txi,
                          pipeline$tx2gene,
