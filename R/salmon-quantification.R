@@ -29,7 +29,7 @@ runSalmon <- function (fq1, fq2, id,
                                     fq1, " does not exist")) )
         return(NA)
     
-    if (paired && ! checkFile(fq1,
+    if (paired && ! checkFile(fq2,
                               .message=paste0("runSalmon(): fastq2 ",
                                               fq2, " does not exist")) )
         return(NA)
@@ -54,6 +54,8 @@ runSalmon <- function (fq1, fq2, id,
     logging(paste0("runSalmon() salmon running for ", id),
             .module="salmon")
     ret <- system2("salmon", param, wait = TRUE)
+    logging(paste0("runSalmon() salmon finished for ", id),
+            .module="salmon")
 
     if (0 != ret)
     {
@@ -73,7 +75,7 @@ runSalmon <- function (fq1, fq2, id,
     logging(paste0("'runSalmon(): renaming ", tmp.dir,
                    " to ", outputdir, "."),
             .module="salmon")
-    dir.create(outputdir, recursive=T)
+    ##dir.create(outputdir, recursive=T)
     file.move(tmp.dir, outputdir)
    
     return(output.quant.sf)
@@ -96,6 +98,8 @@ salmonQuant <- function (metadata, index="", outputdir="output/salmon",
 
     logging("salmonQuant() parallel quantification", .module="salmon")
     indexes <- 1:nrow(metadata)
+    if (! dir.exists(outputdir))
+        dir.create(outputdir, recursive=T)
     filenames <- parallel::mclapply(
                                indexes,
                                function (i)
