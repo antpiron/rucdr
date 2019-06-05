@@ -12,7 +12,7 @@ numericListOverlap <- function(sample1, sample2, stepsize, alternative)
     
     overlap <- function(a, b)
     {
-        count <- as.integer(sum(as.numeric(sample1[1:a] %in% sample2[1:b])))
+        count <- as.integer(sum(as.numeric(names(sample1)[1:a] %in% sample2[1:b])))
         
         switch(alternative,
                enrichment={
@@ -83,7 +83,7 @@ RRHO <- function(list1, list2,
     nlist2 <- length(list2)
     
     
-    hypermat <- numericListOverlap(list1, list2,
+    hypermat <- numericListOverlap(names(list1), names(list2),
                                    stepsize, alternative)
     
     hypermat$padj <- matrix(p.adjust(hypermat$pval, method="BY"),
