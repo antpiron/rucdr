@@ -78,7 +78,7 @@ deseq2Results  <- function (pipeline, c1, c2,
     {
         pipeline <- tx2genes(pipeline)
 
-        ##rownames(res)  <- sapply(strsplit(rownames(res),'\\.'),'[',1)
+        rownames(res)  <- sapply(strsplit(rownames(res),'\\.'),'[',1)
         res <- merge(as.data.frame(res), pipeline$tx2gene,
                      by.x=0, by.y="TXNAME", all.x=T)
         rownames(res) <- res$Row.names
