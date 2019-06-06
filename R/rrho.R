@@ -74,8 +74,6 @@ RRHO <- function(list1, list2,
                 .message="Alternative should be 'two.sided' or 'enrichment'.",
                 .stop=T)
 
-    if (is.null(stepsize))
-        stepsize=defaultStepSize(list1, list2)
 
     ## Keep the common ids
     inter <- intersect(names(list1), names(list2))
@@ -87,7 +85,9 @@ RRHO <- function(list1, list2,
     list2  <- list2[order(list2[inter],decreasing=TRUE)]
     nlist1 <- length(list1)
     nlist2 <- length(list2)
-    
+
+    if (is.null(stepsize))
+        stepsize=defaultStepSize(list1, list2)
     
     hypermat <- numericListOverlap(names(list1), names(list2),
                                    stepsize, alternative)
@@ -164,7 +164,7 @@ plot.rrho <- function (rrho, min.pval=1e-12,
                        colors=c('darkblue', 'darkgreen',
                                 'darkorange', 'darkred'),
                        labels=c("",""),
-                       .log=log10)
+                       .log=log2)
 {
     max.log <- -.log(min.pval)
     no.zero <- apply(rrho$padj, 1:2,
