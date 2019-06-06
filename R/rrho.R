@@ -20,7 +20,7 @@ numericListOverlap <- function(sample1, sample2, stepsize, alternative)
                    pval <- phyper(q=count-1,
                                   m=a, n=n-a+1, k=b,
                                   lower.tail=FALSE)
-                   fdr <- the.mean / count
+                   fdr <- the.mean / (count+1e-12)
                    signs <- 1L
                },
                two.sided={
@@ -30,7 +30,7 @@ numericListOverlap <- function(sample1, sample2, stepsize, alternative)
                    upper <- max(count, symmetric)
 
                    ## TODO: is this right? Think so.
-                   fdr <- the.mean / upper
+                   fdr <- the.mean / (upper+1e-12)
                    
                    pval <- phyper(q=lower,
                                   m=a, n=n-a+1, k=b,
@@ -100,6 +100,30 @@ RRHO <- function(list1, list2,
                      class="rrho"))
 }
 
+
+getDown.index  <- function(l)
+{
+    ind <- which(l < 0)
+    if (length(ind) > 0)
+        ind[1]
+    else
+        length(l)+1
+}
+
+getUPUP <- function(rrho, fdr=0.3)
+{
+    x.ind <- (getDown.index(rrho$list1) - 1) %/% rrho$stepsize + 1
+    y.ind <- (getDown.index(rrho$list2) - 1) %/% rrho$stepsize + 1
+    logging(paste0("x = ", x.ind, " ; y = ", y.ind))
+    ## start from 2 because phyper does not make any sens for 1
+    UP.mat <- ifelse(rrho$sign[2:x.ind,2:y.ind,drop=FALSE] < 0, 1,
+                     rrho$padj[2:x.ind,2:y.ind,drop=FALSE])
+    UP.fdr <- rrho$fdr[2:x.ind,2:y.ind,drop=FALSE]
+    min.ind  <- which(UP.mat == min(UP.mat), arr.ind=TRUE)
+    logging(paste0("fdr = ", UP.fdr[min.ind[1,1], min.ind[1,2]] ))
+    min.ind
+}
+
 #' @export
 plot <- function (rrho, ...)
 {
@@ -126,22 +150,22 @@ plot.rrho <- function (rrho, min.pval=1e-12,
                               gp=gpar(fontsize=13, fontface="bold"))
     vperc <- ncol(rrho$pval) / 10
     hperc <- nrow(rrho$pval) / 10
-    ggplot(data = melt(signed.log.pval),
-           aes(x=Var1, y=Var2, fill=value)) + 
+    gg <- ggplot(data = melt(signed.log.pval),
+                 aes(x=Var1, y=Var2, fill=value)) + 
         geom_tile() +
         scale_fill_gradientn(colors = colors, breaks = b,
                              labels = format(b),
                              limits=b[c(1,length(colors))],
                              name="-log p.val") + 
         theme(##axis.title.x=element_blank(),
-              axis.text.x=element_blank(),
-              axis.ticks.x=element_blank(),
-              ##axis.title.y=element_blank(),
-              axis.text.y=element_blank(),
-              axis.ticks.y=element_blank(),
-              panel.grid.major = element_blank(),
-              panel.grid.minor = element_blank(),
-              panel.background = element_blank()) +
+            axis.text.x=element_blank(),
+            axis.ticks.x=element_blank(),
+            ##axis.title.y=element_blank(),
+            axis.text.y=element_blank(),
+            axis.ticks.y=element_blank(),
+            panel.grid.major = element_blank(),
+            panel.grid.minor = element_blank(),
+            panel.background = element_blank()) +
         xlab(labels[1]) +  ylab(labels[2]) +
         annotation_custom(text_up,
                           xmin=hperc,xmax=hperc,ymin=-1.2,ymax=-1.2) +
@@ -155,11 +179,19 @@ plot.rrho <- function (rrho, min.pval=1e-12,
         annotation_custom(text_down_rot,
                           ymin=ncol(rrho$pval)+vperc,
                           ymax=ncol(rrho$pval)-3*vperc,
-                          xmin=-1.8,xmax=-1.8) +
-        geom_vline(aes(xintercept = which(rrho$list1 < 0)[1] / rrho$stepsize), 
-                   linetype = "dotted", colour = "gray10",size = 0.5) +
-        geom_hline(aes(yintercept = which(rrho$list2 < 0)[1] / rrho$stepsize), 
-                   linetype = "dotted", colour = "gray10",size = 0.5)
+                          xmin=-1.8,xmax=-1.8)
+    x.ind <- which(rrho$list1 < 0)
+    if ( length(x.ind) > 0 )
+        gg  <- gg +
+            geom_vline(aes(xintercept = x.ind[1] / rrho$stepsize), 
+                       linetype = "dotted", colour = "gray10",size = 0.5)
+    y.ind <- which(rrho$list2 < 0)
+    if ( length(y.ind) > 0 )
+        gg  <- gg +
+            geom_hline(aes(yintercept = y.ind[1] / rrho$stepsize), 
+                       linetype = "dotted", colour = "gray10",size = 0.5)
+
+    return(gg)
 }
 
 
