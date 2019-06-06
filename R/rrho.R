@@ -163,12 +163,13 @@ plot <- function (rrho, ...)
 plot.rrho <- function (rrho, min.pval=1e-12,
                        colors=c('darkblue', 'darkgreen',
                                 'darkorange', 'darkred'),
-                       labels=c("",""))
+                       labels=c("",""),
+                       .log=log10)
 {
-    max.log <- -log(min.pval)
+    max.log <- -.log(min.pval)
     no.zero <- apply(rrho$padj, 1:2,
                      function (p) min(p + min.pval, 1) )
-    signed.log.pval <- -log(no.zero) * rrho$signs 
+    signed.log.pval <- -.log(no.zero) * rrho$signs 
 
     b <- c(-max.log, 0, max.log)
     text_up <- grid::textGrob("up", gp=grid::gpar(fontsize=13, fontface="bold"))
