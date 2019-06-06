@@ -131,14 +131,15 @@ getUPUP <- function(rrho, fdr=0.3)
 
 getDOWNDOWN <- function(rrho, fdr=0.3)
 {
-    ## TODO: start above midpoint in logFC
+    ## remove last line
     x.len <- nrow(rrho$padj) - 1
+    ## TODO: start above midpoint in logFC
     x.ind <- getDown.index(rrho$list1) %/% rrho$stepsize + 1
     y.len <- ncol(rrho$padj) - 1
     y.ind <- getDown.index(rrho$list2) %/% rrho$stepsize + 1
     logging(paste0("x = ", x.ind, " ; y = ", y.ind),
             .module="RRHO")
-    ## start from 2 because phyper does not make any sense for 1
+    ## 
     DOWN.mat <- ifelse(rrho$sign[x.ind:x.len,y.ind:y.len,drop=FALSE] < 0, 1,
                      rrho$padj[x.ind:x.len,y.ind:y.len,drop=FALSE])
     DOWN.fdr <- rrho$fdr[x.ind:x.len,y.ind:y.len,drop=FALSE]
