@@ -95,7 +95,8 @@ RRHO <- function(list1, list2,
     hypermat$padj <- matrix(p.adjust(hypermat$pval, method="BY"),
                             nrow=nrow(hypermat$pval))
 
-    return(structure(hypermat,
+    return(structure(c(hypermat, list(list1=list1, list2=list2),
+                       stepsize=stepsize),
                      class="rrho"))
 }
 
@@ -108,7 +109,8 @@ plot <- function (rrho, ...)
 #' @export
 plot.rrho <- function (rrho, min.pval=1e-12,
                        colors=c('darkblue', 'darkgreen',
-                                'darkorange', 'darkred'))
+                                'darkorange', 'darkred'),
+                       labels=c("",""))
 {
     max.log <- -log(min.pval)
     no.zero <- apply(rrho$padj, 1:2,
@@ -116,7 +118,14 @@ plot.rrho <- function (rrho, min.pval=1e-12,
     signed.log.pval <- -log(no.zero) * rrho$signs 
 
     b <- c(-max.log, 0, max.log)
-
+    text_up <- textGrob("up", gp=gpar(fontsize=13, fontface="bold"))
+    text_down <- textGrob("down", gp=gpar(fontsize=13, fontface="bold"))
+    text_up_rot <- textGrob("up", rot=90,
+                               gp=gpar(fontsize=13, fontface="bold"))
+    text_down_rot <- textGrob("down", rot=90,
+                              gp=gpar(fontsize=13, fontface="bold"))
+    vperc <- ncol(rrho$pval) / 10
+    hperc <- nrow(rrho$pval) / 10
     ggplot(data = melt(signed.log.pval),
            aes(x=Var1, y=Var2, fill=value)) + 
         geom_tile() +
@@ -124,15 +133,33 @@ plot.rrho <- function (rrho, min.pval=1e-12,
                              labels = format(b),
                              limits=b[c(1,length(colors))],
                              name="-log p.val") + 
-        theme(axis.title.x=element_blank(),
+        theme(##axis.title.x=element_blank(),
               axis.text.x=element_blank(),
               axis.ticks.x=element_blank(),
-              axis.title.y=element_blank(),
+              ##axis.title.y=element_blank(),
               axis.text.y=element_blank(),
               axis.ticks.y=element_blank(),
               panel.grid.major = element_blank(),
               panel.grid.minor = element_blank(),
-              panel.background = element_blank(),)
+              panel.background = element_blank()) +
+        xlab(labels[1]) +  ylab(labels[2]) +
+        annotation_custom(text_up,
+                          xmin=hperc,xmax=hperc,ymin=-1.2,ymax=-1.2) +
+        annotation_custom(text_down,
+                          xmin=nrow(rrho$pval)+hperc,
+                          xmax=nrow(rrho$pval)-3*hperc,
+                          ymin=-1.2,ymax=-1.2) +
+        annotation_custom(text_up_rot,
+                          xmin=-1.8,xmax=-1.8,
+                          ymin=vperc,ymax=vperc) +
+        annotation_custom(text_down_rot,
+                          ymin=ncol(rrho$pval)+vperc,
+                          ymax=ncol(rrho$pval)-3*vperc,
+                          xmin=-1.8,xmax=-1.8) +
+        geom_vline(aes(xintercept = which(rrho$list1 < 0)[1] / rrho$stepsize), 
+                   linetype = "dotted", colour = "gray10",size = 0.5) +
+        geom_hline(aes(yintercept = which(rrho$list2 < 0)[1] / rrho$stepsize), 
+                   linetype = "dotted", colour = "gray10",size = 0.5)
 }
 
 
