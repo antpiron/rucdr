@@ -115,13 +115,14 @@ getUPUP <- function(rrho, fdr=0.3)
     x.ind <- (getDown.index(rrho$list1) - 1) %/% rrho$stepsize + 1
     y.ind <- (getDown.index(rrho$list2) - 1) %/% rrho$stepsize + 1
     logging(paste0("x = ", x.ind, " ; y = ", y.ind))
-    ## start from 2 because phyper does not make any sens for 1
+    ## start from 2 because phyper does not make any sense for 1
     UP.mat <- ifelse(rrho$sign[2:x.ind,2:y.ind,drop=FALSE] < 0, 1,
                      rrho$padj[2:x.ind,2:y.ind,drop=FALSE])
     UP.fdr <- rrho$fdr[2:x.ind,2:y.ind,drop=FALSE]
     min.ind  <- which(UP.mat == min(UP.mat), arr.ind=TRUE)
     logging(paste0("fdr = ", UP.fdr[min.ind[1,1], min.ind[1,2]] ))
-    min.ind
+    intersect(names(rrho$list1)[1:(min.ind[1,1] * rrho$stepsize)],
+              names(rrho$list2)[1:(min.ind[1,2] * rrho$stepsize)])
 }
 
 #' @export
@@ -142,53 +143,53 @@ plot.rrho <- function (rrho, min.pval=1e-12,
     signed.log.pval <- -log(no.zero) * rrho$signs 
 
     b <- c(-max.log, 0, max.log)
-    text_up <- textGrob("up", gp=gpar(fontsize=13, fontface="bold"))
-    text_down <- textGrob("down", gp=gpar(fontsize=13, fontface="bold"))
-    text_up_rot <- textGrob("up", rot=90,
-                               gp=gpar(fontsize=13, fontface="bold"))
-    text_down_rot <- textGrob("down", rot=90,
-                              gp=gpar(fontsize=13, fontface="bold"))
+    text_up <- grid::textGrob("up", gp=grid::gpar(fontsize=13, fontface="bold"))
+    text_down <- grid::textGrob("down", gp=grid::gpar(fontsize=13, fontface="bold"))
+    text_up_rot <- grid::textGrob("up", rot=90,
+                               gp=grid::gpar(fontsize=13, fontface="bold"))
+    text_down_rot <- grid::textGrob("down", rot=90,
+                              gp=grid::gpar(fontsize=13, fontface="bold"))
     vperc <- ncol(rrho$pval) / 10
     hperc <- nrow(rrho$pval) / 10
-    gg <- ggplot(data = melt(signed.log.pval),
+    gg <- ggplot2::ggplot(data = melt(signed.log.pval),
                  aes(x=Var1, y=Var2, fill=value)) + 
-        geom_tile() +
-        scale_fill_gradientn(colors = colors, breaks = b,
+        ggplot2::geom_tile() +
+        ggplot2::scale_fill_gradientn(colors = colors, breaks = b,
                              labels = format(b),
                              limits=b[c(1,length(colors))],
                              name="-log p.val") + 
-        theme(##axis.title.x=element_blank(),
-            axis.text.x=element_blank(),
-            axis.ticks.x=element_blank(),
+        ggplot2::theme(##axis.title.x=element_blank(),
+            axis.text.x=ggplot2::element_blank(),
+            axis.ticks.x=ggplot2::element_blank(),
             ##axis.title.y=element_blank(),
-            axis.text.y=element_blank(),
-            axis.ticks.y=element_blank(),
-            panel.grid.major = element_blank(),
-            panel.grid.minor = element_blank(),
-            panel.background = element_blank()) +
-        xlab(labels[1]) +  ylab(labels[2]) +
-        annotation_custom(text_up,
+            axis.text.y=ggplot2::element_blank(),
+            axis.ticks.y=ggplot2::element_blank(),
+            panel.grid.major = ggplot2::element_blank(),
+            panel.grid.minor = ggplot2::element_blank(),
+            panel.background = ggplot2::element_blank()) +
+        ggplot2::xlab(labels[1]) +  ggplot2::ylab(labels[2]) +
+        ggplot2::annotation_custom(text_up,
                           xmin=hperc,xmax=hperc,ymin=-1.2,ymax=-1.2) +
-        annotation_custom(text_down,
+        ggplot2::annotation_custom(text_down,
                           xmin=nrow(rrho$pval)+hperc,
                           xmax=nrow(rrho$pval)-3*hperc,
                           ymin=-1.2,ymax=-1.2) +
-        annotation_custom(text_up_rot,
+        ggplot2::annotation_custom(text_up_rot,
                           xmin=-1.8,xmax=-1.8,
                           ymin=vperc,ymax=vperc) +
-        annotation_custom(text_down_rot,
+        ggplot2::annotation_custom(text_down_rot,
                           ymin=ncol(rrho$pval)+vperc,
                           ymax=ncol(rrho$pval)-3*vperc,
                           xmin=-1.8,xmax=-1.8)
     x.ind <- which(rrho$list1 < 0)
     if ( length(x.ind) > 0 )
         gg  <- gg +
-            geom_vline(aes(xintercept = x.ind[1] / rrho$stepsize), 
+            ggplot2::geom_vline(aes(xintercept = x.ind[1] / rrho$stepsize), 
                        linetype = "dotted", colour = "gray10",size = 0.5)
     y.ind <- which(rrho$list2 < 0)
     if ( length(y.ind) > 0 )
         gg  <- gg +
-            geom_hline(aes(yintercept = y.ind[1] / rrho$stepsize), 
+            ggplot2::geom_hline(aes(yintercept = y.ind[1] / rrho$stepsize), 
                        linetype = "dotted", colour = "gray10",size = 0.5)
 
     return(gg)
