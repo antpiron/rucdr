@@ -114,15 +114,42 @@ getUPUP <- function(rrho, fdr=0.3)
 {
     x.ind <- (getDown.index(rrho$list1) - 1) %/% rrho$stepsize + 1
     y.ind <- (getDown.index(rrho$list2) - 1) %/% rrho$stepsize + 1
-    logging(paste0("x = ", x.ind, " ; y = ", y.ind))
+    logging(paste0("x = ", x.ind, " ; y = ", y.ind),
+            .module="RRHO")
     ## start from 2 because phyper does not make any sense for 1
     UP.mat <- ifelse(rrho$sign[2:x.ind,2:y.ind,drop=FALSE] < 0, 1,
                      rrho$padj[2:x.ind,2:y.ind,drop=FALSE])
     UP.fdr <- rrho$fdr[2:x.ind,2:y.ind,drop=FALSE]
     min.ind  <- which(UP.mat == min(UP.mat), arr.ind=TRUE)
-    logging(paste0("fdr = ", UP.fdr[min.ind[1,1], min.ind[1,2]] ))
+    logging(paste0("min.ind = ", min.ind[1,1], ", ", min.ind[1,2] ),
+            .module="RRHO")
+    logging(paste0("fdr = ", UP.fdr[min.ind[1,1], min.ind[1,2]] ),
+            .module="RRHO")
     intersect(names(rrho$list1)[1:(min.ind[1,1] * rrho$stepsize)],
               names(rrho$list2)[1:(min.ind[1,2] * rrho$stepsize)])
+}
+
+getDOWNDOWN <- function(rrho, fdr=0.3)
+{
+    ## TODO: start above midpoint in logFC
+    x.len <- nrow(rrho$padj) - 1
+    x.ind <- getDown.index(rrho$list1) %/% rrho$stepsize + 1
+    y.len <- ncol(rrho$padj) - 1
+    y.ind <- getDown.index(rrho$list2) %/% rrho$stepsize + 1
+    logging(paste0("x = ", x.ind, " ; y = ", y.ind),
+            .module="RRHO")
+    ## start from 2 because phyper does not make any sense for 1
+    DOWN.mat <- ifelse(rrho$sign[x.ind:x.len,y.ind:y.len,drop=FALSE] < 0, 1,
+                     rrho$padj[x.ind:x.len,y.ind:y.len,drop=FALSE])
+    DOWN.fdr <- rrho$fdr[x.ind:x.len,y.ind:y.len,drop=FALSE]
+    min.ind  <- which(DOWN.mat == min(DOWN.mat), arr.ind=TRUE)
+    logging(paste0("fdr = ", DOWN.fdr[min.ind[1,1], min.ind[1,2]] ),
+            .module="RRHO")
+    min.ind <- t(t(min.ind) + c(x.ind, y.ind))
+    logging(paste0("min.ind = ", min.ind[1,1], ", ", min.ind[1,2] ),
+            .module="RRHO")
+    intersect(names(rrho$list1)[(min.ind[1,1] * rrho$stepsize):length(rrho$list1)],
+              names(rrho$list2)[(min.ind[1,2] * rrho$stepsize):length(rrho$list2)])
 }
 
 #' @export
