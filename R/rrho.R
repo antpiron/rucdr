@@ -159,19 +159,36 @@ plot <- function (rrho, ...)
     UseMethod("plot", rrho)
 }
 
+my.colors <- c('darkblue', 'darkorchid4', 'darkgreen',
+               'lightpink4', 'tan', 'darkorange',
+               'chocolate4', 'brown4',  'darkred')
+## my.colors <- c(sapply(0:255,
+##                       function (x)
+##                           paste0("#",format(as.hexmode(255-x),width=2),
+##                                  format(as.hexmode(x),width=2), "00")),
+##                sapply(0:255,
+##                       function (x)
+##                           paste0("#00",format(as.hexmode(255-x),width=2),
+##                                  format(as.hexmode(x),width=2))))
+
+
 #' @export
-plot.rrho <- function (rrho, min.pval=1e-12,
-                       colors=c('darkblue', 'darkgreen',
-                                'darkorange', 'darkred'),
+plot.rrho <- function (rrho,
+                       colors=my.colors,
                        labels=c("",""),
                        .log=log2)
 {
-    max.log <- -.log(min.pval)
-    no.zero <- apply(rrho$padj, 1:2,
-                     function (p) min(p + min.pval, 1) )
-    signed.log.pval <- -.log(no.zero) * rrho$signs 
+    no.zero <- ifelse(rrho$padj == 0, 10, rrho$padj)
+    min.pval <- min(no.zero) / 2
+    no.zero <- ifelse(no.zero == 10, min.pval, no.zero)
+    ##max.log <- -.log(min.pval)
+    ##no.zero <- apply(rrho$padj, 1:2,
+    ##                 function (p) min(p + min.pval, 1) )
+    signed.log.pval <- -.log(no.zero) * rrho$signs
+    max.log <- max(abs(signed.log.pval))
+    min.log <- - max.log
 
-    b <- c(-max.log, 0, max.log)
+    b <- c(min.log, 0, max.log)
     text_up <- grid::textGrob("up", gp=grid::gpar(fontsize=13, fontface="bold"))
     text_down <- grid::textGrob("down", gp=grid::gpar(fontsize=13, fontface="bold"))
     text_up_rot <- grid::textGrob("up", rot=90,
