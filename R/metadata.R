@@ -4,9 +4,9 @@
 #' @param pipeline A pipeline object
 #' @param ... other arguments
 #' @export
-metadata <- function (pipeline, ...)
+metadata <- function (files, ...)
 {
-    UseMethod("metadata", pipeline)
+    UseMethod("metadata", files)
 }
 
 
@@ -14,17 +14,29 @@ metadata <- function (pipeline, ...)
 #' 
 #' @param pipeline A pipeline object
 #' @param filename A tab separated file 
-#' @rdname fastq
+#' @rdname metadata
 #' @export
-metadata.pipeline <- function (pipeline, filename="metadata.tsv")
+metadata.character <- function (files)
 {
-    metadata <- read.table(filename, header = TRUE,
-                              sep="\t", quote="")
+    metadata <- Reduce(function (a, b)
+    {
+        df <- read.table(b, header = TRUE,
+                         sep="\t", quote="")
+        concat.data.frame(a, df)
+    },
+    files, data.frame(id="-1", stringsAsFactors=F))
+    metadata <- metadata[-1,]
         
     if (is.null(metadata$id)) { stop("Mandatory `id` column missing.") }
 
     row.names(metadata) <- metadata$id
-    pipeline$metadata <- metadata    
 
-    return(pipeline)
+    structure(metadata,
+              class = c("metadata", "data.frame"))
+}
+
+#' @export
+metadata.factor <- function(files)
+{
+    metadata(as.character(files))
 }

@@ -46,7 +46,9 @@ tx2genes.pipeline <- function (pipeline)
         return(pipeline)   
     
     k <- biomaRt::keys(pipeline$txdb, keytype = "TXNAME")
-    pipeline$tx2gene <- biomaRt::select(pipeline$txdb, k, "GENEID", "TXNAME")
+    pipeline$tx2gene <- biomaRt::select(pipeline$txdb, k,
+                                        "GENEID", "TXNAME")
+    row.names(pipeline$tx2gene) <- pipeline$tx2gene$TXNAME
 
     return(pipeline)
 }

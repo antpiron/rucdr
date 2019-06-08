@@ -3,7 +3,8 @@ library(rucdr)
 library(magrittr)
 
 
-pl <- pipeline() %>% options(gtf="data/test.gtf") %>%  GTF()
+pl <- data.frame(id=character()) %>%
+    pipeline() %>% options(gtf="data/test.gtf") %>%  GTF()
 on.exit(file.remove("data/test.gtf.sqlite"))
 
 test_select <- function (txdb)
@@ -27,7 +28,8 @@ test_that("pl is a pipeline()", {
 
 
 ## test cache
-pl <- pipeline() %>% options(gtf="data/test.gtf") %>%  GTF()
+pl <- data.frame(id=character()) %>%
+    pipeline() %>% options(gtf="data/test.gtf") %>%  GTF()
 test_that("pl is a pipeline()", {
     expect_s3_class(pl, "pipeline")
     expect_true(! is.null(pl$option))
