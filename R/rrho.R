@@ -141,7 +141,6 @@ getUPUP.ij <-  function(rrho)
         ## start from 2 because phyper does not make any sense for 1
         UP.mat <- ifelse(rrho$sign[2:x.ind,2:y.ind,drop=FALSE] < 0, 1,
                          rrho$padj[2:x.ind,2:y.ind,drop=FALSE])
-        UP.fdr <- rrho$fdr[2:x.ind,2:y.ind,drop=FALSE]
         upup <- which(UP.mat == min(UP.mat), arr.ind=TRUE) + 1
         upup <- intersect.clean(upup)
         rrho$best$upup <- upup
@@ -150,7 +149,14 @@ getUPUP.ij <-  function(rrho)
     return(rrho$best$upup)
 }
 
-getUPUP <- function(rrho, fdr=0.3)
+#' @export
+getUPUP <- function (rrho, ...)
+{
+    UseMethod("getUPUP", rrho)
+}
+
+#' @export
+getUPUP.rrho <- function(rrho)
 {
     min.ind  <- getUPUP.ij(rrho)
     logging(paste0("min.ind = ", min.ind[1,1], ", ", min.ind[1,2] ),
@@ -177,7 +183,6 @@ getDOWNDOWN.ij <-  function(rrho)
         ## 
         DOWN.mat <- ifelse(rrho$sign[x.ind:x.len,y.ind:y.len,drop=FALSE] < 0, 1,
                            rrho$padj[x.ind:x.len,y.ind:y.len,drop=FALSE])
-        DOWN.fdr <- rrho$fdr[x.ind:x.len,y.ind:y.len,drop=FALSE]
         downdown <- t(t(which(DOWN.mat == min(DOWN.mat), arr.ind=TRUE)) +
                                 c(x.ind-1,y.ind-1))
         downdown <- intersect.clean(downdown, decreasing=FALSE)
@@ -186,7 +191,14 @@ getDOWNDOWN.ij <-  function(rrho)
     return(rrho$best$downdown)
 }
 
-getDOWNDOWN <- function(rrho, fdr=0.3)
+#' @export
+getDOWNDOWN <- function (rrho, ...)
+{
+    UseMethod("getDOWNDOWN", rrho)
+}
+
+#' @export
+getDOWNDOWN.rrho <- function(rrho)
 {
     min.ind <- getDOWNDOWN.ij(rrho)
     logging(paste0("min.ind = ", min.ind[1,1], ", ", min.ind[1,2] ),
