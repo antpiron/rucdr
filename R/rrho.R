@@ -155,10 +155,10 @@ getUPUP <- function(rrho, fdr=0.3)
     min.ind  <- getUPUP.ij(rrho)
     logging(paste0("min.ind = ", min.ind[1,1], ", ", min.ind[1,2] ),
             .module="RRHO")
-    logging(paste0("fdr = ", UP.fdr[min.ind[1,1], min.ind[1,2]] ),
-            .module="RRHO")
-    intersect(names(rrho$list1)[1:(min.ind[1,1] * rrho$stepsize)],
-              names(rrho$list2)[1:(min.ind[1,2] * rrho$stepsize)])
+    unique(c(apply(min.ind, 1,
+            function (x)
+                intersect(names(rrho$list1)[1:((x[1]-1) * rrho$stepsize) + 1],
+                          names(rrho$list2)[1:((x[2]-1) * rrho$stepsize) + 1]))))
 }
 
 getDOWNDOWN.ij <-  function(rrho)
@@ -189,13 +189,12 @@ getDOWNDOWN.ij <-  function(rrho)
 getDOWNDOWN <- function(rrho, fdr=0.3)
 {
     min.ind <- getDOWNDOWN.ij(rrho)
-    logging(paste0("fdr = ", DOWN.fdr[min.ind[1,1], min.ind[1,2]] ),
-            .module="RRHO")
-    min.ind <- t(t(min.ind) + c(x.ind, y.ind))
     logging(paste0("min.ind = ", min.ind[1,1], ", ", min.ind[1,2] ),
             .module="RRHO")
-    intersect(names(rrho$list1)[(min.ind[1,1] * rrho$stepsize):length(rrho$list1)],
-              names(rrho$list2)[(min.ind[1,2] * rrho$stepsize):length(rrho$list2)])
+    unique(c(apply(min.ind, 1,
+            function (x)
+                intersect(names(rrho$list1)[((x[1]-1) * rrho$stepsize + 1):length(rrho$list1)],
+                          names(rrho$list2)[((x[2]-1) * rrho$stepsize + 1):length(rrho$list2)]))))
 }
 
 #' @export
