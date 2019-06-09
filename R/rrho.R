@@ -134,10 +134,9 @@ getUPUP.ij <-  function(rrho)
     if (is.null(rrho$best$upup))
     {
         ## -1 because half-brained started the R indexes at 1
-        ## -1 because getDown.index gives the first negative index
-        x.ind <- (getDown.index(rrho$list1) - 2) %/% rrho$stepsize + 1
-        y.ind <- (getDown.index(rrho$list2) - 2) %/% rrho$stepsize + 1
-        logging(paste0("x = ", x.ind, " ; y = ", y.ind),
+        x.ind <- (getDown.index(rrho$list1) - 1) %/% rrho$stepsize
+        y.ind <- (getDown.index(rrho$list2) - 1) %/% rrho$stepsize
+        logging(paste0("getUPUP.ij(): x = ", x.ind, " ; y = ", y.ind),
                 .module="RRHO")
         ## start from 2 because phyper does not make any sense for 1
         UP.mat <- ifelse(rrho$sign[2:x.ind,2:y.ind,drop=FALSE] < 0, 1,
@@ -173,7 +172,7 @@ getDOWNDOWN.ij <-  function(rrho)
         x.ind <- (getDown.index(rrho$list1)-1) %/% rrho$stepsize + 1
         y.len <- ncol(rrho$padj) - 1
         y.ind <- (getDown.index(rrho$list2)-1) %/% rrho$stepsize + 1
-        logging(paste0("x = ", x.ind, " ; y = ", y.ind),
+        logging(paste0("getDOWNDOWN.ij(): x = ", x.ind, " ; y = ", y.ind),
                 .module="RRHO")
         ## 
         DOWN.mat <- ifelse(rrho$sign[x.ind:x.len,y.ind:y.len,drop=FALSE] < 0, 1,
