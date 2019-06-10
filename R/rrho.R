@@ -110,9 +110,11 @@ getDown.index  <- function(l)
         length(l)+1
 }
 
-intersect.clean <- function(mat, decreasing=TRUE)
+intersect.clean <- function(mat, x.bigger=TRUE, y.bigger=TRUE)
 {
-    op <- if (decreasing) `<` else `>`
+    op <- if (y.bigger) `<` else `>`
+    sign.x <- sign(0.5-x.bigger)
+    sign.y <- sign(0.5-y.bigger)
     
     rec <- function(mat)
     {
@@ -123,10 +125,88 @@ intersect.clean <- function(mat, decreasing=TRUE)
         }
         return(mat)
     }
-    mat <- mat[order(mat[,1], mat[,2], decreasing=decreasing),,
+    mat <- mat[order(sign.x*mat[,1], sign.y*mat[,2], decreasing=FALSE),,
                  drop=FALSE]
     
     return(rec(mat))
+}
+
+getUPDOWN.ij <-  function(rrho)
+{
+    if (is.null(rrho$best$updown))
+    {
+        ## -1 because half-brained started the R indexes at 1
+        x.ind <- (getDown.index(rrho$list1) - 1) %/% rrho$stepsize
+        y.len <- ncol(rrho$padj) - 1
+        y.ind <- (getDown.index(rrho$list2)-1) %/% rrho$stepsize + 1
+        logging(paste0("getUPDOWN.ij(): x = ", x.ind, " ; y = ", y.ind),
+                .module="RRHO")
+        ## start from 2 because phyper does not make any sense for 1
+        UP.mat <- ifelse(rrho$sign[2:x.ind,y.ind:y.len,drop=FALSE] > 0, 1,
+                         rrho$padj[2:x.ind,y.ind:y.len,drop=FALSE])
+        updown <- t(t(which(UP.mat == min(UP.mat), arr.ind=TRUE)) + c(1,y.ind-1))
+        updown <- intersect.clean(updown, y.bigger=FALSE)
+        rrho$best$updown <- updown
+    }
+    
+    return(rrho$best$updown)
+}
+
+#' @export
+getUPDOWN <- function (rrho, ...)
+{
+    UseMethod("getUPDOWN", rrho)
+}
+
+#' @export
+getUPDOWN.rrho <- function(rrho)
+{
+    min.ind  <- getUPDOWN.ij(rrho)
+    logging(paste0("min.ind = ", min.ind[1,1], ", ", min.ind[1,2] ),
+            .module="RRHO")
+    unique(c(apply(min.ind, 1,
+            function (x)
+                intersect(names(rrho$list1)[1:((x[1]-1) * rrho$stepsize) + 1],
+                          names(rrho$list2)[((x[2]-1) * rrho$stepsize + 1):length(rrho$list2)]))))
+}
+
+getDOWNUP.ij <-  function(rrho)
+{
+    if (is.null(rrho$best$downup))
+    {
+        ## -1 because half-brained started the R indexes at 1
+        x.ind <- (getDown.index(rrho$list1) - 1) %/% rrho$stepsize + 1
+        x.len <- nrow(rrho$padj) - 1
+        y.ind <- (getDown.index(rrho$list2)-1) %/% rrho$stepsize
+        logging(paste0("getUPDOWN.ij(): x = ", x.ind, " ; y = ", y.ind),
+                .module="RRHO")
+        ## start from 2 because phyper does not make any sense for 1
+        UP.mat <- ifelse(rrho$sign[x.ind:x.len,2:y.ind,drop=FALSE] > 0, 1,
+                         rrho$padj[x.ind:x.len,2:y.ind,drop=FALSE])
+        downup <- t(t(which(UP.mat == min(UP.mat), arr.ind=TRUE)) + c(x.ind-1,1))
+        downup <- intersect.clean(downup, x.bigger=FALSE)
+        rrho$best$downup <- downup
+    }
+    
+    return(rrho$best$downup)
+}
+
+#' @export
+getDOWNUP <- function (rrho, ...)
+{
+    UseMethod("getDOWNUP", rrho)
+}
+
+#' @export
+getDOWNUP.rrho <- function(rrho)
+{
+    min.ind <- getDOWNUP.ij(rrho)
+    logging(paste0("min.ind = ", min.ind[1,1], ", ", min.ind[1,2] ),
+            .module="RRHO")
+    unique(c(apply(min.ind, 1,
+            function (x)
+                intersect(names(rrho$list1)[((x[1]-1) * rrho$stepsize + 1):length(rrho$list1)],
+                           names(rrho$list2)[1:((x[2]-1) * rrho$stepsize) + 1]))))
 }
 
 getUPUP.ij <-  function(rrho)
@@ -185,7 +265,7 @@ getDOWNDOWN.ij <-  function(rrho)
                            rrho$padj[x.ind:x.len,y.ind:y.len,drop=FALSE])
         downdown <- t(t(which(DOWN.mat == min(DOWN.mat), arr.ind=TRUE)) +
                                 c(x.ind-1,y.ind-1))
-        downdown <- intersect.clean(downdown, decreasing=FALSE)
+        downdown <- intersect.clean(downdown, x.bigger=FALSE, y.bigger=FALSE)
         rrho$best$downdown <- downdown
     }
     return(rrho$best$downdown)
@@ -215,9 +295,9 @@ plot <- function (rrho, ...)
     UseMethod("plot", rrho)
 }
 
-my.colors <- c('darkblue', 'darkorchid4', 'darkgreen',
-               'lightpink4', 'tan', 'darkorange',
-               'chocolate4', 'brown4',  'darkred')
+my.colors <- c('darkblue', 'darkorchid4', 'darkgreen', 'lightpink4',
+##                'tan',
+               'darkorange', 'chocolate4', 'brown4',  'darkred')
 ## my.colors <- c(sapply(0:255,
 ##                       function (x)
 ##                           paste0("#",format(as.hexmode(255-x),width=2),
@@ -257,6 +337,10 @@ plot.rrho <- function (rrho,
     upup$padj <- apply(upup,1,function (x) rrho$padj[x[1],x[2]])
     downdown <-  as.data.frame(getDOWNDOWN.ij(rrho))
     downdown$padj <- apply(downdown,1,function (x) rrho$padj[x[1],x[2]])
+    updown <-  as.data.frame(getUPDOWN.ij(rrho))
+    updown$padj <- apply(updown,1,function (x) rrho$padj[x[1],x[2]])
+    downup <-  as.data.frame(getDOWNUP.ij(rrho))
+    downup$padj <- apply(downup,1,function (x) rrho$padj[x[1],x[2]])
     gg <- ggplot2::ggplot() + 
         ggplot2::geom_tile(data = melt(signed.log.pval),
                            aes(x=Var1, y=Var2, fill=value)) +
@@ -297,6 +381,20 @@ plot.rrho <- function (rrho,
         ggplot2::geom_point(data=downdown,
                             aes(x=row, y=col)) +
         ggplot2::geom_text(data=downdown,
+                           aes(x=row, y=col,
+                               label=formatC(padj,
+                                             format = "e", digits = 2)),
+                           hjust="inward", vjust="inward") +
+        ggplot2::geom_point(data=updown,
+                            aes(x=row, y=col)) +
+        ggplot2::geom_text(data=updown,
+                           aes(x=row, y=col,
+                               label=formatC(padj,
+                                             format = "e", digits = 2)),
+                           hjust="inward", vjust="inward") +
+        ggplot2::geom_point(data=downup,
+                            aes(x=row, y=col)) +
+        ggplot2::geom_text(data=downup,
                            aes(x=row, y=col,
                                label=formatC(padj,
                                              format = "e", digits = 2)),
