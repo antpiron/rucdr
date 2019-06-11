@@ -96,6 +96,7 @@ RRHO <- function(list1, list2,
                             nrow=nrow(hypermat$pval))
 
     return(structure(c(hypermat, list(list1=list1, list2=list2),
+                       nlist1=nlist1, nlist2=nlist2,
                        stepsize=stepsize),
                      class="rrho"))
 }
@@ -164,7 +165,7 @@ getUPDOWN.rrho <- function(rrho)
     min.ind  <- getUPDOWN.ij(rrho)
     logging(paste0("min.ind = ", min.ind[1,1], ", ", min.ind[1,2] ),
             .module="RRHO")
-    unique(c(apply(min.ind, 1,
+    unique(unlist(apply(min.ind, 1,
             function (x)
                 intersect(names(rrho$list1)[1:((x[1]-1) * rrho$stepsize) + 1],
                           names(rrho$list2)[((x[2]-1) * rrho$stepsize + 1):length(rrho$list2)]))))
@@ -203,7 +204,7 @@ getDOWNUP.rrho <- function(rrho)
     min.ind <- getDOWNUP.ij(rrho)
     logging(paste0("min.ind = ", min.ind[1,1], ", ", min.ind[1,2] ),
             .module="RRHO")
-    unique(c(apply(min.ind, 1,
+    unique(unlist(apply(min.ind, 1,
             function (x)
                 intersect(names(rrho$list1)[((x[1]-1) * rrho$stepsize + 1):length(rrho$list1)],
                            names(rrho$list2)[1:((x[2]-1) * rrho$stepsize) + 1]))))
@@ -241,7 +242,7 @@ getUPUP.rrho <- function(rrho)
     min.ind  <- getUPUP.ij(rrho)
     logging(paste0("min.ind = ", min.ind[1,1], ", ", min.ind[1,2] ),
             .module="RRHO")
-    unique(c(apply(min.ind, 1,
+    unique(unlist(apply(min.ind, 1,
             function (x)
                 intersect(names(rrho$list1)[1:((x[1]-1) * rrho$stepsize) + 1],
                           names(rrho$list2)[1:((x[2]-1) * rrho$stepsize) + 1]))))
@@ -283,10 +284,16 @@ getDOWNDOWN.rrho <- function(rrho)
     min.ind <- getDOWNDOWN.ij(rrho)
     logging(paste0("min.ind = ", min.ind[1,1], ", ", min.ind[1,2] ),
             .module="RRHO")
-    unique(c(apply(min.ind, 1,
-            function (x)
-                intersect(names(rrho$list1)[((x[1]-1) * rrho$stepsize + 1):length(rrho$list1)],
-                          names(rrho$list2)[((x[2]-1) * rrho$stepsize + 1):length(rrho$list2)]))))
+    ##print(rrho$nlist1)
+    ##print(min.ind)
+    result <- unique(unlist(apply(min.ind, 1,
+                             function (x)
+                                 intersect(names(rrho$list1)[((x[1]-1) * rrho$stepsize + 1):length(rrho$list1)],
+                                           names(rrho$list2)[((x[2]-1) * rrho$stepsize + 1):length(rrho$list2)]))))
+
+    ##print("END")
+    
+    return(result)
 }
 
 #' @export
@@ -346,7 +353,8 @@ plot.rrho <- function (rrho,
                            aes(x=Var1, y=Var2, fill=value)) +
         ggplot2::scale_fill_gradientn(colors = colors, breaks = b,
                                       labels = format(b),
-                                      limits=b[c(1,length(colors))],
+                                      limits=b[c(1,3)],
+                                      ##limits=b[c(1,length(colors))],
                                       name="-log p.val") + 
         ggplot2::theme(##axis.title.x=element_blank(),
                      axis.text.x=ggplot2::element_blank(),
