@@ -305,11 +305,18 @@ plot <- function (rrho, ...)
 my.colors <- c('darkblue', 'darkorchid4', 'darkgreen', 'lightpink4',
 ##                'tan',
                'darkorange', 'chocolate4', 'brown4',  'darkred')
+## my.colors <- c('darkblue',"cyan4","cyan3","cyan2","cyan1","cyan",
+##                "palegreen4","palegreen3","palegreen2","palegreen1",
+##                "yellow",
+##                "orange1","orange2","orange3","orange4",
+##                "red", "red1", "red2", "red3", "red4", 'darkred')
+
+
 ## my.colors <- c(sapply(0:255,
 ##                       function (x)
 ##                           paste0("#",format(as.hexmode(255-x),width=2),
-##                                  format(as.hexmode(x),width=2), "00")),
-##                sapply(0:255,
+##                                   format(as.hexmode(x),width=2), "00")),
+##               sapply(0:255,
 ##                       function (x)
 ##                           paste0("#00",format(as.hexmode(255-x),width=2),
 ##                                  format(as.hexmode(x),width=2))))
