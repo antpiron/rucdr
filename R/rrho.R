@@ -165,10 +165,10 @@ getUPDOWN.rrho <- function(rrho)
     min.ind  <- getUPDOWN.ij(rrho)
     logging(paste0("min.ind = ", min.ind[1,1], ", ", min.ind[1,2] ),
             .module="RRHO")
-    unique(unlist(apply(min.ind, 1,
+    as.vector(unique(unlist(apply(min.ind, 1,
             function (x)
                 intersect(names(rrho$list1)[1:((x[1]-1) * rrho$stepsize) + 1],
-                          names(rrho$list2)[((x[2]-1) * rrho$stepsize + 1):length(rrho$list2)]))))
+                          names(rrho$list2)[((x[2]-1) * rrho$stepsize + 1):length(rrho$list2)])))))
 }
 
 getDOWNUP.ij <-  function(rrho)
@@ -204,10 +204,10 @@ getDOWNUP.rrho <- function(rrho)
     min.ind <- getDOWNUP.ij(rrho)
     logging(paste0("min.ind = ", min.ind[1,1], ", ", min.ind[1,2] ),
             .module="RRHO")
-    unique(unlist(apply(min.ind, 1,
+    as.vector(unique(unlist(apply(min.ind, 1,
             function (x)
                 intersect(names(rrho$list1)[((x[1]-1) * rrho$stepsize + 1):length(rrho$list1)],
-                           names(rrho$list2)[1:((x[2]-1) * rrho$stepsize) + 1]))))
+                           names(rrho$list2)[1:((x[2]-1) * rrho$stepsize) + 1])))))
 }
 
 getUPUP.ij <-  function(rrho)
@@ -242,10 +242,10 @@ getUPUP.rrho <- function(rrho)
     min.ind  <- getUPUP.ij(rrho)
     logging(paste0("min.ind = ", min.ind[1,1], ", ", min.ind[1,2] ),
             .module="RRHO")
-    unique(unlist(apply(min.ind, 1,
+    as.vector(unique(unlist(apply(min.ind, 1,
             function (x)
                 intersect(names(rrho$list1)[1:((x[1]-1) * rrho$stepsize) + 1],
-                          names(rrho$list2)[1:((x[2]-1) * rrho$stepsize) + 1]))))
+                          names(rrho$list2)[1:((x[2]-1) * rrho$stepsize) + 1])))))
 }
 
 getDOWNDOWN.ij <-  function(rrho)
@@ -286,15 +286,43 @@ getDOWNDOWN.rrho <- function(rrho)
             .module="RRHO")
     ##print(rrho$nlist1)
     ##print(min.ind)
-    result <- unique(unlist(apply(min.ind, 1,
+    result <- as.vector(unique(unlist(apply(min.ind, 1,
                              function (x)
                                  intersect(names(rrho$list1)[((x[1]-1) * rrho$stepsize + 1):length(rrho$list1)],
-                                           names(rrho$list2)[((x[2]-1) * rrho$stepsize + 1):length(rrho$list2)]))))
+                                           names(rrho$list2)[((x[2]-1) * rrho$stepsize + 1):length(rrho$list2)])))))
 
     ##print("END")
     
     return(result)
 }
+
+#' @export
+getEnrichment <- function (rrho, ...)
+{
+    UseMethod("getEnrichment", rrho)
+}
+
+#' @export
+getEnrichment.rrho <- function (rrho, direction="upup")
+{
+    res <- switch(direction,
+                  upup={
+                      getUPUP(rrho)
+                  },
+                  downdown={
+                      getDOWNDOWN(rrho)
+                  },
+                  updown={
+                      getUPDOWN(rrho)
+                  },
+                  downup={
+                      getDOWNUP(rrho)
+                  })
+    return(res)
+}
+
+
+
 
 #' @export
 plot <- function (rrho, ...)

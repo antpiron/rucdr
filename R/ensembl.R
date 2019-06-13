@@ -13,11 +13,13 @@ ensembl <- function(user="readonly", passwd="readonly",
 }
 
 
+#' @export
 geneDescription <- function (ensembl, ...)
 {
     UseMethod("geneDescription", ensembl)
 }
 
+#' @export
 geneDescription.ensembl <- function(ensembl, genes)
 {
     # You can fetch all results:
