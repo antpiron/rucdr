@@ -44,3 +44,25 @@ geneDescription.ensembl <- function(ensembl, genes)
     return(out)
 }
 
+#' @export
+transcriptDescription <- function (ensembl, ...)
+{
+    UseMethod("transcriptDescription", ensembl)
+}
+
+#' @export
+transcriptDescription.ensembl <- function(ensembl, transcripts)
+{
+    # You can fetch all results:
+    res <- DBI::dbSendQuery(ensembl$env$handle,
+                            "SELECT *  FROM transcript, transcript_attrib WHERE transcript.transcript_id = transcript_attrib.transcript_id AND transcript_attrib.attrib_type_id = 4 AND transcript.stable_id  = ?")
+    out <- t(sapply(transcripts, function(transcript)
+    {
+        DBI::dbBind(res, transcript)
+        DBI::dbFetch(res)
+    }))
+    DBI::dbClearResult(res)
+
+    return(out)
+}
+
