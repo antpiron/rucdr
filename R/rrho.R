@@ -350,19 +350,21 @@ my.colors <- c('darkblue', 'darkorchid4', 'darkgreen', 'lightpink4',
 ##                                  format(as.hexmode(x),width=2))))
 
 
+signed.lpval <- function (pval, signs, .log=log2)
+{
+    no.zero <- ifelse(pval == 0, 10, pval)
+    min.pval <- min(no.zero) / 2
+    no.zero <- ifelse(no.zero == 10, min.pval, no.zero)
+    return(-.log(no.zero) *signs)
+}
+
 #' @export
 plot.rrho <- function (rrho,
                        colors=my.colors,
                        labels=c("",""),
                        .log=log2)
 {
-    no.zero <- ifelse(rrho$padj == 0, 10, rrho$padj)
-    min.pval <- min(no.zero) / 2
-    no.zero <- ifelse(no.zero == 10, min.pval, no.zero)
-    ##max.log <- -.log(min.pval)
-    ##no.zero <- apply(rrho$padj, 1:2,
-    ##                 function (p) min(p + min.pval, 1) )
-    signed.log.pval <- -.log(no.zero) * rrho$signs
+    signed.log.pval <- signed.lpval(rrho$padj, rrho$signs, .log)
     max.log <- max(abs(signed.log.pval))
     min.log <- - max.log
 
@@ -457,6 +459,34 @@ plot.rrho <- function (rrho,
 }
 
 
+
+myColorRamp <- function(colors, values)
+{
+    v <- (values - min(values))/diff(range(values))
+    x <- colorRamp(colors)(v)
+    rgb(x[,1], x[,2], x[,3], maxColorValue = 255)
+}
+
+#' @export
+plot3d <- function (rrho,
+                    labels=c("x","y"),
+                    .log=log2)
+{
+    padj <- rrho$padj[2:nrow(rrho$padj),2:ncol(rrho$padj)]
+    signs <- rrho$signs[2:nrow(rrho$signs),2:ncol(rrho$signs)]
+    signed.log.pval <- signed.lpval(padj, signs, .log)
+    max.log <- max(abs(signed.log.pval))
+    min.log <- - max.log
+    melted <- melt(signed.log.pval)
+    colnames(melted) <- c(labels, "-log pval")
+    ## print(head(melted))
+    colors <- myColorRamp(c("blue", "red"), melted[,3]) 
+    scatterplot3d::scatterplot3d(melt(signed.log.pval),
+                                 color=colors,
+                                 xlab=labels[1],
+                                 ylab=labels[2],
+                                 zlab="-log pval")
+}
 
 ## n <- 100
 ## list1 <- 1:n
