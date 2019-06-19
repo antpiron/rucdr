@@ -15,12 +15,28 @@ deseq2 <- function (pipeline, ...)
     UseMethod("deseq2", pipeline)
 }
 
+
+default.filter.dds <- function (dds)
+{
+    idx <- rowSums(DESeq2::counts(dds, normalized=TRUE) >= 5 ) >= ncol(DESeq2::counts(dds)) / 2
+    
+    return(dds[idx, ])
+}
+
 #' Run salmon for genes expression
 #' 
 #' @param pipeline A pipeline object
+#' @param design A design (default: design=~condition)
+#' @param .filter A function returning a deseq2 object
+#'   \code{ function (dds) {
+#'      idx <- rowSums(DESeq2::counts(dds, normalized=TRUE) >= 5 ) >= ncol(DESeq2::counts(dds)) / 2 ;
+#'      return(dds[idx, ])
+#'    } }
+#' 
 #' @rdname deseq2
 #' @export
-deseq2 <- function (pipeline, design=~condition)
+deseq2 <- function (pipeline, design=~condition,
+                    .filter=default.filter.dds)
 {
     last.res <- getResultsByClass(pipeline, "rnaseq_quantification")
     if (is.null(last.res))
@@ -42,11 +58,8 @@ deseq2 <- function (pipeline, design=~condition)
                                             design)
  
     logging("Running estimateSizeFactors()", .module="deseq2")
-    ## TODO: estimateSizeFactorsForMatrix. Necessary ??!?
     dds <- DESeq2::estimateSizeFactors(dds)
-    ## TODO: custom filter because too low expression
-    idx <- rowSums(DESeq2::counts(dds, normalized=TRUE) >= 5 ) >= ncol(DESeq2::counts(dds))/2
-    dds <- dds[idx, ]
+    dds <- .filter(dds)
 
     logging("Running DESeq()", .module="deseq2")
     BiocParallel::register(BiocParallel::MulticoreParam(min(pipeline$option$nthreads,2)))
