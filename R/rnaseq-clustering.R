@@ -11,14 +11,22 @@ distance.spearman <- function (a, b)
 #' @param data A #expression x #sample matrix.
 #' @param distance.fn A function(a,b) returning the distance between a and b (default: 1-cor(method="spearman")).
 #' @param mc.cores The number of cores.
+#' @param std Standardize data (x - mu) / sd
 #' @return an heatmap plot.
 #' @examples
 #' expression.heatmap(matrix(rnorm(64), nrow=8))
 #' @export
 expression.heatmap <- function (data,
                                 distance.fn=distance.spearman,
+                                std=FALSE,
                                 mc.cores=4, ...)
 {
+    if (std)
+    {
+        mu <- rowMeans(data)
+        sd <- rowSds(data)
+        data <- (data - mu) / sd
+    }
     nsamples <- ncol(data)
     distMAT <- mat.or.vec(nsamples, nsamples)
     for (i in 1:(nsamples-1))
