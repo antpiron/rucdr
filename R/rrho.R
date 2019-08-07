@@ -1,13 +1,14 @@
 
 library(reshape2)
 library(ggplot2)
+library(ggrepel)
 
 defaultStepSize <- function (list1, list2)
 {
     ceiling(min(sqrt( c(length(list1), length(list2)) )))
 }	
 
-numericListOverlap <- function(sample1, sample2, stepsize, alternative)
+numericListOverlap <- function(sample1, sample2, stepsize, alternative, tol)
 {
     n <- length(sample1)
     overlap <- function(a, b)
@@ -29,9 +30,21 @@ numericListOverlap <- function(sample1, sample2, stepsize, alternative)
                    lower <- min(count, symmetric)
                    upper <- max(count, symmetric)
 
+                   ## if(signs < 0){
+                   ##     lower<- count 
+                   ##     upper<- 2*the.mean - count 
+                   ## } else{
+                   ##     lower<- 2*the.mean - count 
+                   ##     upper<- count 
+                   ## }
+
                    ## TODO: is this right? Think so.
                    fdr <- the.mean / (upper+1e-12)
-                   
+
+                   ## TODO: escape zeroes, cheat from RRHO orignal package, anything better?
+                   ## hypergeom is expecting integer not double!?!!!!!!!
+                   lower <- min(lower+tol, the.mean)
+                   upper <- max(upper-tol, the.mean)
                    pval <- phyper(q=lower,
                                   m=a, n=n-a+1, k=b,
                                   lower.tail=TRUE) +
@@ -68,7 +81,7 @@ numericListOverlap <- function(sample1, sample2, stepsize, alternative)
 #' @export RRHO
 RRHO <- function(list1, list2, 
                  stepsize=NULL, 
-                 alternative="two.sided")
+                 alternative="two.sided", tol=0.000001)
 {
     checkAction((alternative=='two.sided' || alternative=='enrichment'),
                 .message="Alternative should be 'two.sided' or 'enrichment'.",
@@ -90,7 +103,7 @@ RRHO <- function(list1, list2,
         stepsize=defaultStepSize(list1, list2)
     
     hypermat <- numericListOverlap(names(list1), names(list2),
-                                   stepsize, alternative)
+                                   stepsize, alternative, tol=tol)
     
     hypermat$padj <- matrix(p.adjust(hypermat$pval, method="BY"),
                             nrow=nrow(hypermat$pval))
@@ -418,28 +431,28 @@ plot.rrho <- function (rrho,
                                    xmin=-1.8,xmax=-1.8) +
         ggplot2::geom_point(data=upup,
                             aes(x=row, y=col)) +
-        ggplot2::geom_text(data=upup,
+        ggplot2::geom_text_repel(data=upup,
                            aes(x=row, y=col,
                                label=formatC(padj,
                                              format = "e", digits = 2)),
                            hjust="inward", vjust="inward") +
         ggplot2::geom_point(data=downdown,
                             aes(x=row, y=col)) +
-        ggplot2::geom_text(data=downdown,
+        ggplot2::geom_text_repel(data=downdown,
                            aes(x=row, y=col,
                                label=formatC(padj,
                                              format = "e", digits = 2)),
                            hjust="inward", vjust="inward") +
         ggplot2::geom_point(data=updown,
                             aes(x=row, y=col)) +
-        ggplot2::geom_text(data=updown,
+        ggplot2::geom_text_repel(data=updown,
                            aes(x=row, y=col,
                                label=formatC(padj,
                                              format = "e", digits = 2)),
                            hjust="inward", vjust="inward") +
         ggplot2::geom_point(data=downup,
                             aes(x=row, y=col)) +
-        ggplot2::geom_text(data=downup,
+        ggplot2::geom_text_repel(data=downup,
                            aes(x=row, y=col,
                                label=formatC(padj,
                                              format = "e", digits = 2)),
