@@ -398,6 +398,14 @@ plot.rrho <- function (rrho,
     updown$padj <- apply(updown,1,function (x) rrho$padj[x[1],x[2]])
     downup <-  as.data.frame(getDOWNUP.ij(rrho))
     downup$padj <- apply(downup,1,function (x) rrho$padj[x[1],x[2]])
+    len.colors <- length(colors)
+    half.len.colors <- len.colors %/% 2
+    colors.values <- seq(0, len.colors) /  len.colors
+    ##colors.values <- ifelse(colors.values > 0.5,
+    ##                        2^(colors.values+0.5)-2,
+    ##                        log2(colors.values+1))
+    ##print(colors.values)
+
     gg <- ggplot2::ggplot() + 
         ggplot2::geom_tile(data = melt(signed.log.pval),
                            aes(x=Var1, y=Var2, fill=value)) +
@@ -405,7 +413,8 @@ plot.rrho <- function (rrho,
                                       labels = format(b),
                                       limits=b[c(1,3)],
                                       ##limits=b[c(1,length(colors))],
-                                      name="-log p.val") + 
+                                      name="-log p.val",
+                                      values=colors.values) + 
         ggplot2::theme(##axis.title.x=element_blank(),
                      axis.text.x=ggplot2::element_blank(),
                      axis.ticks.x=ggplot2::element_blank(),
