@@ -375,7 +375,7 @@ signed.lpval <- function (pval, signs, .log=log2)
 plot.rrho <- function (rrho,
                        colors=my.colors,
                        labels=c("",""),
-                       .log=log2)
+                       .log=log2, repel.force=150)
 {
     signed.log.pval <- signed.lpval(rrho$padj, rrho$signs, .log)
     max.log <- max(abs(signed.log.pval))
@@ -417,46 +417,51 @@ plot.rrho <- function (rrho,
                      panel.background = ggplot2::element_blank()) +
         ggplot2::xlab(labels[1]) +  ggplot2::ylab(labels[2]) +
         ggplot2::annotation_custom(text_up,
-                                   xmin=hperc,xmax=hperc,ymin=-1.2,ymax=-1.2) +
+                                   xmin=hperc,xmax=hperc,
+                                   ymin=-1.6,ymax=-1.6) +
         ggplot2::annotation_custom(text_down,
                                    xmin=nrow(rrho$pval)+hperc,
                                    xmax=nrow(rrho$pval)-3*hperc,
-                                   ymin=-1.2,ymax=-1.2) +
+                                   ymin=-1.6,ymax=-1.6) +
         ggplot2::annotation_custom(text_up_rot,
-                                   xmin=-1.8,xmax=-1.8,
+                                   xmin=-2.6,xmax=-2.6,
                                    ymin=vperc,ymax=vperc) +
         ggplot2::annotation_custom(text_down_rot,
                                    ymin=ncol(rrho$pval)+vperc,
                                    ymax=ncol(rrho$pval)-3*vperc,
-                                   xmin=-1.8,xmax=-1.8) +
+                                   xmin=-2.6,xmax=-2.6) +
         ggplot2::geom_point(data=upup,
                             aes(x=row, y=col)) +
-        ggplot2::geom_text_repel(data=upup,
+        ggrepel::geom_text_repel(data=upup,
                            aes(x=row, y=col,
                                label=formatC(padj,
                                              format = "e", digits = 2)),
-                           hjust="inward", vjust="inward") +
+                           hjust=1, vjust=1,
+                           force = repel.force) +
         ggplot2::geom_point(data=downdown,
                             aes(x=row, y=col)) +
-        ggplot2::geom_text_repel(data=downdown,
+        ggrepel::geom_text_repel(data=downdown,
                            aes(x=row, y=col,
                                label=formatC(padj,
                                              format = "e", digits = 2)),
-                           hjust="inward", vjust="inward") +
+                           hjust=0, vjust=0,
+                           force = repel.force) +
         ggplot2::geom_point(data=updown,
                             aes(x=row, y=col)) +
-        ggplot2::geom_text_repel(data=updown,
+        ggrepel::geom_text_repel(data=updown,
                            aes(x=row, y=col,
                                label=formatC(padj,
                                              format = "e", digits = 2)),
-                           hjust="inward", vjust="inward") +
+                           hjust=1, vjust=0,
+                           force = repel.force) +
         ggplot2::geom_point(data=downup,
                             aes(x=row, y=col)) +
-        ggplot2::geom_text_repel(data=downup,
+        ggrepel::geom_text_repel(data=downup,
                            aes(x=row, y=col,
                                label=formatC(padj,
                                              format = "e", digits = 2)),
-                           hjust="inward", vjust="inward")
+                           hjust=0, vjust=1,
+                           force = repel.force)
     x.ind <- which(rrho$list1 < 0)
     if ( length(x.ind) > 0 )
         gg  <- gg +
