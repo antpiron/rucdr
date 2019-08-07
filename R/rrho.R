@@ -418,50 +418,18 @@ plot.rrho <- function (rrho,
         ggplot2::xlab(labels[1]) +  ggplot2::ylab(labels[2]) +
         ggplot2::annotation_custom(text_up,
                                    xmin=hperc,xmax=hperc,
-                                   ymin=-1.6,ymax=-1.6) +
+                                   ymin=-hperc/4,ymax=-hperc/4) +
         ggplot2::annotation_custom(text_down,
                                    xmin=nrow(rrho$pval)+hperc,
                                    xmax=nrow(rrho$pval)-3*hperc,
-                                   ymin=-1.6,ymax=-1.6) +
+                                   ymin=-hperc/4,ymax=-hperc/4) +
         ggplot2::annotation_custom(text_up_rot,
-                                   xmin=-2.6,xmax=-2.6,
+                                   xmin=-vperc/4,xmax=-vperc/4,
                                    ymin=vperc,ymax=vperc) +
         ggplot2::annotation_custom(text_down_rot,
                                    ymin=ncol(rrho$pval)+vperc,
                                    ymax=ncol(rrho$pval)-3*vperc,
-                                   xmin=-2.6,xmax=-2.6) +
-        ggplot2::geom_point(data=upup,
-                            aes(x=row, y=col)) +
-        ggrepel::geom_text_repel(data=upup,
-                           aes(x=row, y=col,
-                               label=formatC(padj,
-                                             format = "e", digits = 2)),
-                           hjust=1, vjust=1,
-                           force = repel.force) +
-        ggplot2::geom_point(data=downdown,
-                            aes(x=row, y=col)) +
-        ggrepel::geom_text_repel(data=downdown,
-                           aes(x=row, y=col,
-                               label=formatC(padj,
-                                             format = "e", digits = 2)),
-                           hjust=0, vjust=0,
-                           force = repel.force) +
-        ggplot2::geom_point(data=updown,
-                            aes(x=row, y=col)) +
-        ggrepel::geom_text_repel(data=updown,
-                           aes(x=row, y=col,
-                               label=formatC(padj,
-                                             format = "e", digits = 2)),
-                           hjust=1, vjust=0,
-                           force = repel.force) +
-        ggplot2::geom_point(data=downup,
-                            aes(x=row, y=col)) +
-        ggrepel::geom_text_repel(data=downup,
-                           aes(x=row, y=col,
-                               label=formatC(padj,
-                                             format = "e", digits = 2)),
-                           hjust=0, vjust=1,
-                           force = repel.force)
+                                   xmin=-vperc/4,xmax=-vperc/4) 
     x.ind <- which(rrho$list1 < 0)
     if ( length(x.ind) > 0 )
         gg  <- gg +
@@ -471,7 +439,45 @@ plot.rrho <- function (rrho,
     if ( length(y.ind) > 0 )
         gg  <- gg +
             ggplot2::geom_hline(aes(yintercept = (y.ind[1]-1) / rrho$stepsize + 1), 
-                       linetype = "dotted", colour = "gray10",size = 1)
+                                linetype = "dotted", colour = "gray10",size = 1)
+
+    gg <- gg +
+        ggrepel::geom_text_repel(data=upup,
+                           aes(x=row, y=col,
+                               label=formatC(padj,
+                                             format = "e", digits = 1),
+                               colour = "gray"),
+                           hjust=1, vjust=1,
+                           force = repel.force, show.legend = FALSE) +
+        ggrepel::geom_text_repel(data=downdown,
+                           aes(x=row, y=col,
+                               label=formatC(padj,
+                                             format = "e", digits = 1),
+                               colour = "gray"),
+                           hjust=0, vjust=0,
+                           force = repel.force, show.legend = FALSE) +
+        ggrepel::geom_text_repel(data=updown,
+                           aes(x=row, y=col,
+                               label=formatC(padj,
+                                             format = "e", digits = 1),
+                               colour = "gray"),
+                           hjust=1, vjust=0,
+                           force = repel.force, show.legend = FALSE) +
+        ggrepel::geom_text_repel(data=downup,
+                           aes(x=row, y=col,
+                               label=formatC(padj,
+                                             format = "e", digits = 1),
+                               colour = "gray"),
+                           hjust=0, vjust=1,
+                           force = repel.force, show.legend = FALSE) +
+        ggplot2::geom_point(data=upup,
+                            aes(x=row, y=col)) +
+        ggplot2::geom_point(data=downdown,
+                            aes(x=row, y=col)) +
+        ggplot2::geom_point(data=updown,
+                            aes(x=row, y=col)) +
+        ggplot2::geom_point(data=downup,
+                            aes(x=row, y=col))
 
     return(gg)
 }
