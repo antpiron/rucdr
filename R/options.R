@@ -7,7 +7,7 @@
 #' @export
 options <- function (pipeline, ...)
 {
-    UseMethod("options", pipeline)
+    UseMethod("options")
 }
 
 #' Set options
@@ -21,4 +21,9 @@ options.pipeline <- function (pipeline, ...)
     pipeline$option <- modifyList(pipeline$option, list(...))
     
     return(pipeline)
+}
+
+options.default <- function (...)
+{
+    base::options(...)
 }
