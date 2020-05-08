@@ -377,10 +377,16 @@ plot.rrho <- function (rrho,
                        labels=c("",""),
                        .log=log2, repel.force=150)
 {
+    ## print(rrho$padj)
     signed.log.pval <- signed.lpval(rrho$padj, rrho$signs, .log)
     max.log <- max(abs(signed.log.pval))
     min.log <- - max.log
 
+    if (0 == min.log  && 0 == max.log)
+    {
+        min.log  <- -0.001
+        max.log <- 0.001
+    }
     b <- c(min.log, 0, max.log)
     text_up <- grid::textGrob("up", gp=grid::gpar(fontsize=13, fontface="bold"))
     text_down <- grid::textGrob("down", gp=grid::gpar(fontsize=13, fontface="bold"))
@@ -405,7 +411,8 @@ plot.rrho <- function (rrho,
     ##                        2^(colors.values+0.5)-2,
     ##                        log2(colors.values+1))
     ##print(colors.values)
-
+    ## print(b)
+    ## print(format(b))
     gg <- ggplot2::ggplot() + 
         ggplot2::geom_tile(data = melt(signed.log.pval),
                            aes(x=Var1, y=Var2, fill=value)) +
@@ -456,28 +463,28 @@ plot.rrho <- function (rrho,
                                label=formatC(padj,
                                              format = "e", digits = 1),
                                colour = "gray"),
-                           hjust=1, vjust=1,
+                           hjust=1, vjust=1, colour = "black",
                            force = repel.force, show.legend = FALSE) +
         ggrepel::geom_text_repel(data=downdown,
                            aes(x=row, y=col,
                                label=formatC(padj,
                                              format = "e", digits = 1),
                                colour = "gray"),
-                           hjust=0, vjust=0,
+                           hjust=0, vjust=0, colour = "black",
                            force = repel.force, show.legend = FALSE) +
         ggrepel::geom_text_repel(data=updown,
                            aes(x=row, y=col,
                                label=formatC(padj,
                                              format = "e", digits = 1),
                                colour = "gray"),
-                           hjust=1, vjust=0,
+                           hjust=1, vjust=0, colour = "black",
                            force = repel.force, show.legend = FALSE) +
         ggrepel::geom_text_repel(data=downup,
                            aes(x=row, y=col,
                                label=formatC(padj,
                                              format = "e", digits = 1),
                                colour = "gray"),
-                           hjust=0, vjust=1,
+                           hjust=0, vjust=1, colour = "black",
                            force = repel.force, show.legend = FALSE) +
         ggplot2::geom_point(data=upup,
                             aes(x=row, y=col)) +
