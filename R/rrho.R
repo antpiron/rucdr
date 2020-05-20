@@ -375,7 +375,7 @@ signed.lpval <- function (pval, signs, .log=log2)
 plot.rrho <- function (rrho,
                        colors=my.colors,
                        labels=c("",""),
-                       .log=log2, repel.force=150)
+                       .log=log2, repel.force=150, p.val.visible=TRUE)
 {
     ## print(rrho$padj)
     signed.log.pval <- signed.lpval(rrho$padj, rrho$signs, .log)
@@ -457,44 +457,47 @@ plot.rrho <- function (rrho,
             ggplot2::geom_hline(aes(yintercept = (y.ind[1]-1) / rrho$stepsize + 1), 
                                 linetype = "dotted", colour = "gray10",size = 1)
 
-    gg <- gg +
-        ggrepel::geom_text_repel(data=upup,
-                           aes(x=row, y=col,
-                               label=formatC(padj,
-                                             format = "e", digits = 1),
-                               colour = "gray"),
-                           hjust=1, vjust=1, colour = "black",
-                           force = repel.force, show.legend = FALSE) +
-        ggrepel::geom_text_repel(data=downdown,
-                           aes(x=row, y=col,
-                               label=formatC(padj,
-                                             format = "e", digits = 1),
-                               colour = "gray"),
-                           hjust=0, vjust=0, colour = "black",
-                           force = repel.force, show.legend = FALSE) +
-        ggrepel::geom_text_repel(data=updown,
-                           aes(x=row, y=col,
-                               label=formatC(padj,
-                                             format = "e", digits = 1),
-                               colour = "gray"),
-                           hjust=1, vjust=0, colour = "black",
-                           force = repel.force, show.legend = FALSE) +
-        ggrepel::geom_text_repel(data=downup,
-                           aes(x=row, y=col,
-                               label=formatC(padj,
-                                             format = "e", digits = 1),
-                               colour = "gray"),
-                           hjust=0, vjust=1, colour = "black",
-                           force = repel.force, show.legend = FALSE) +
-        ggplot2::geom_point(data=upup,
-                            aes(x=row, y=col)) +
-        ggplot2::geom_point(data=downdown,
-                            aes(x=row, y=col)) +
-        ggplot2::geom_point(data=updown,
-                            aes(x=row, y=col)) +
-        ggplot2::geom_point(data=downup,
-                            aes(x=row, y=col))
-
+    if (p.val.visible)
+    {
+        gg <- gg +
+            ggrepel::geom_text_repel(data=upup,
+                                     aes(x=row, y=col,
+                                         label=formatC(padj,
+                                                       format = "e", digits = 1),
+                                         colour = "gray"),
+                                     hjust=1, vjust=1, colour = "black",
+                                     force = repel.force, show.legend = FALSE) +
+            ggrepel::geom_text_repel(data=downdown,
+                                     aes(x=row, y=col,
+                                         label=formatC(padj,
+                                                       format = "e", digits = 1),
+                                         colour = "gray"),
+                                     hjust=0, vjust=0, colour = "black",
+                                     force = repel.force, show.legend = FALSE) +
+            ggrepel::geom_text_repel(data=updown,
+                                     aes(x=row, y=col,
+                                         label=formatC(padj,
+                                                       format = "e", digits = 1),
+                                         colour = "gray"),
+                                     hjust=1, vjust=0, colour = "black",
+                                     force = repel.force, show.legend = FALSE) +
+            ggrepel::geom_text_repel(data=downup,
+                                     aes(x=row, y=col,
+                                         label=formatC(padj,
+                                                       format = "e", digits = 1),
+                                         colour = "gray"),
+                                     hjust=0, vjust=1, colour = "black",
+                                     force = repel.force, show.legend = FALSE) +
+            ggplot2::geom_point(data=upup,
+                                aes(x=row, y=col)) +
+            ggplot2::geom_point(data=downdown,
+                                aes(x=row, y=col)) +
+            ggplot2::geom_point(data=updown,
+                                aes(x=row, y=col)) +
+            ggplot2::geom_point(data=downup,
+                                aes(x=row, y=col))
+    }
+    
     return(gg)
 }
 
