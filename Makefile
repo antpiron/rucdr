@@ -14,5 +14,5 @@ doc:
 	R -e 'devtools::build_vignettes()'
 
 scp:	build
-	scp ../rucdr_0.1.tar.gz ulb-WS:/tmp/
+	scp ../rucdr_0.1.tar.gz ulb-ws:/tmp/
 

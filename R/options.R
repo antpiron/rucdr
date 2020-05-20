@@ -23,6 +23,7 @@ options.pipeline <- function (pipeline, ...)
     return(pipeline)
 }
 
+#' @export
 options.default <- function (...)
 {
     base::options(...)
