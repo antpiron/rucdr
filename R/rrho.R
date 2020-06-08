@@ -375,7 +375,7 @@ signed.lpval <- function (pval, signs, .log=log2)
 plot.rrho <- function (rrho,
                        colors=my.colors,
                        labels=c("",""),
-                       .log=log2, repel.force=150, p.val.visible=TRUE)
+                       .log=log2, repel.force=150, p.val.visible=TRUE, base_size=22)
 {
     ## print(rrho$padj)
     signed.log.pval <- signed.lpval(rrho$padj, rrho$signs, .log)
@@ -428,6 +428,9 @@ plot.rrho <- function (rrho,
                      ##axis.title.y=element_blank(),
                      axis.text.y=ggplot2::element_blank(),
                      axis.ticks.y=ggplot2::element_blank(),
+                     base_size = base_size,
+                     ## axis.text=element_text(size=base_size),
+                     axis.title=element_text(size=base_size,face="bold"),
                      panel.grid.major = ggplot2::element_blank(),
                      panel.grid.minor = ggplot2::element_blank(),
                      panel.background = ggplot2::element_blank()) +
@@ -445,7 +448,8 @@ plot.rrho <- function (rrho,
         ggplot2::annotation_custom(text_down_rot,
                                    ymin=ncol(rrho$pval)+vperc,
                                    ymax=ncol(rrho$pval)-3*vperc,
-                                   xmin=-vperc/4,xmax=-vperc/4) 
+                                   xmin=-vperc/4,xmax=-vperc/4) +
+
     x.ind <- which(rrho$list1 < 0)
     if ( length(x.ind) > 0 )
         gg  <- gg +
@@ -466,28 +470,28 @@ plot.rrho <- function (rrho,
                                                        format = "e", digits = 1),
                                          colour = "gray"),
                                      hjust=1, vjust=1, colour = "black",
-                                     force = repel.force, show.legend = FALSE) +
+                                     force = repel.force, show.legend = FALSE, size = base_size) +
             ggrepel::geom_text_repel(data=downdown,
                                      aes(x=row, y=col,
                                          label=formatC(padj,
                                                        format = "e", digits = 1),
                                          colour = "gray"),
                                      hjust=0, vjust=0, colour = "black",
-                                     force = repel.force, show.legend = FALSE) +
+                                     force = repel.force, show.legend = FALSE, size = base_size) +
             ggrepel::geom_text_repel(data=updown,
                                      aes(x=row, y=col,
                                          label=formatC(padj,
                                                        format = "e", digits = 1),
                                          colour = "gray"),
                                      hjust=1, vjust=0, colour = "black",
-                                     force = repel.force, show.legend = FALSE) +
+                                     force = repel.force, show.legend = FALSE, size = base_size) +
             ggrepel::geom_text_repel(data=downup,
                                      aes(x=row, y=col,
                                          label=formatC(padj,
                                                        format = "e", digits = 1),
                                          colour = "gray"),
                                      hjust=0, vjust=1, colour = "black",
-                                     force = repel.force, show.legend = FALSE) +
+                                     force = repel.force, show.legend = FALSE, size = base_size) +
             ggplot2::geom_point(data=upup,
                                 aes(x=row, y=col)) +
             ggplot2::geom_point(data=downdown,
