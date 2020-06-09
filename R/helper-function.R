@@ -116,26 +116,32 @@ is.not.empty <- function (x)
 import <- function (filename, paths = c())
 {
     if ( startsWith(filename, '/') )
-        source(filename)
-    else
     {
-        wd <- tryCatch({dirname(sys.frame(1)$ofile)},
-                       error=function (e) {file.path(".")})
-        path <- file.path(wd, filename)
+        source(filename)
+        return()
+    }
+
+    wd <- tryCatch({dirname(sys.frame(1)$ofile)},
+                   error=function (e) {file.path(".")})
+    path <- file.path(wd, filename)
+    
+    if (file.exists(path) )
+    {
+        source(path)
+        return()
+    }
         
-        if (! file.exists(path) )
+    paths <- c(paths, strsplit(Sys.getenv("R_IMPORT_DIR"), ':')[[1]])
+    for ( cpath in paths )
+    {
+        path <- file.path(cpath, filename)
+        if (file.exists(path) )
         {
-            paths <- c(paths, strsplit(Sys.getenv("R_IMPORT_DIR"), ':')[[1]])
-            for ( cpath in paths )
-            {
-                path <- file.path(cpath, filename)
-                if (file.exists(path) )
-                {
                     source(path)
-                    break
-                }
-            }
+                    return()
         }
     }
+    stop(paste("Unable to find:", filename))
 }
+
 
