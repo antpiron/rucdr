@@ -111,3 +111,31 @@ is.not.empty <- function (x)
 {
     !is.na(x) && !is.null(x) && x != ""
 }
+
+#' @export
+import <- function (filename, paths = c())
+{
+    if ( startsWith(filename, '/') )
+        source(filename)
+    else
+    {
+        wd <- tryCatch({dirname(sys.frame(1)$ofile)},
+                       error=function (e) {file.path(".")})
+        path <- file.path(wd, filename)
+        
+        if (! file.exists(path) )
+        {
+            paths <- c(paths, strsplit(Sys.getenv("R_IMPORT_DIR"), ':')[[1]])
+            for ( cpath in paths )
+            {
+                path <- file.path(cpath, filename)
+                if (file.exists(path) )
+                {
+                    source(path)
+                    break
+                }
+            }
+        }
+    }
+}
+
