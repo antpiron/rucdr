@@ -113,9 +113,19 @@ is.not.empty <- function (x)
 }
 
 #' @export
+isAbsolutePath <- function (path)
+{
+    pattern <- if ("unix" == .Platform$OS.type)
+                   '^([/~]|\\.\\.?(/|$))'
+               else
+                  '^(([a-z]:|\\.\\.?)?\\\\)'
+    grepl(pattern, path)
+}
+
+#' @export
 import <- function (filename, paths = c())
 {
-    if ( startsWith(filename, '/') )
+    if ( isAbsolutePath(filename) )
     {
         source(filename)
         return()
