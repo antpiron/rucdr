@@ -375,27 +375,32 @@ signed.lpval <- function (pval, signs, .log=log2)
 plot.rrho <- function (rrho,
                        colors=my.colors,
                        labels=c("",""),
-                       .log=log2, repel.force=150, p.val.visible=TRUE, base_size=22)
+                       .log=log2, repel.force=150, p.val.visible=TRUE, base_size=20,
+                       max.p.val.number = NULL, show.legend = NA )
 {
     ## print(rrho$padj)
     signed.log.pval <- signed.lpval(rrho$padj, rrho$signs, .log)
     max.log <- max(abs(signed.log.pval))
     min.log <- - max.log
 
+    downup.size <- as.integer(base_size * 3/4)
+    pval.size  <- as.integer(base_size * 1/5)
+    
     if (0 == min.log  && 0 == max.log)
     {
         min.log  <- -0.001
         max.log <- 0.001
     }
     b <- c(min.log, 0, max.log)
-    text_up <- grid::textGrob("up", gp=grid::gpar(fontsize=13, fontface="bold"))
-    text_down <- grid::textGrob("down", gp=grid::gpar(fontsize=13, fontface="bold"))
+    text_up <- grid::textGrob("up", gp=grid::gpar(fontsize=downup.size, fontface="bold"))
+    text_down <- grid::textGrob("down", gp=grid::gpar(fontsize=downup.size, fontface="bold"))
     text_up_rot <- grid::textGrob("up", rot=90,
-                               gp=grid::gpar(fontsize=13, fontface="bold"))
+                               gp=grid::gpar(fontsize=downup.size, fontface="bold"))
     text_down_rot <- grid::textGrob("down", rot=90,
-                              gp=grid::gpar(fontsize=13, fontface="bold"))
+                              gp=grid::gpar(fontsize=downup.size, fontface="bold"))
     vperc <- ncol(rrho$pval) / 10
     hperc <- nrow(rrho$pval) / 10
+    
     upup <- as.data.frame(getUPUP.ij(rrho))
     upup$padj <- apply(upup,1,function (x) rrho$padj[x[1],x[2]])
     downdown <-  as.data.frame(getDOWNDOWN.ij(rrho))
@@ -404,6 +409,19 @@ plot.rrho <- function (rrho,
     updown$padj <- apply(updown,1,function (x) rrho$padj[x[1],x[2]])
     downup <-  as.data.frame(getDOWNUP.ij(rrho))
     downup$padj <- apply(downup,1,function (x) rrho$padj[x[1],x[2]])
+    if (! is.null(max.p.val.number) )
+    {
+        if (max.p.val.number < 1)
+            p.val.visible = FALSE
+        else
+        {
+            upup <- head(upup, max.p.val.number)
+            downdown <- head(downdown, max.p.val.number)
+            updown <- head(updown, max.p.val.number)
+            downup <- head(downup, max.p.val.number)
+        }
+    }
+            
     len.colors <- length(colors)
     half.len.colors <- len.colors %/% 2
     colors.values <- seq(0, len.colors) /  len.colors
@@ -415,20 +433,24 @@ plot.rrho <- function (rrho,
     ## print(format(b))
     gg <- ggplot2::ggplot() + 
         ggplot2::geom_tile(data = melt(signed.log.pval),
-                           aes(x=Var1, y=Var2, fill=value)) +
+                           aes(x=Var1, y=Var2, fill=value), show.legend = show.legend)
+    
+    gg <-  gg +
         ggplot2::scale_fill_gradientn(colors = colors, breaks = b,
                                       labels = format(b),
                                       limits=b[c(1,3)],
                                       ##limits=b[c(1,length(colors))],
                                       name="-log p.val",
-                                      values=colors.values) + 
+                                      values=colors.values)
+    
+    gg <-  gg +
         ggplot2::theme(##axis.title.x=element_blank(),
                      axis.text.x=ggplot2::element_blank(),
                      axis.ticks.x=ggplot2::element_blank(),
                      ##axis.title.y=element_blank(),
                      axis.text.y=ggplot2::element_blank(),
                      axis.ticks.y=ggplot2::element_blank(),
-                     base_size = base_size,
+                     ## base_size = base_size,
                      ## axis.text=element_text(size=base_size),
                      axis.title=element_text(size=base_size,face="bold"),
                      panel.grid.major = ggplot2::element_blank(),
@@ -448,7 +470,7 @@ plot.rrho <- function (rrho,
         ggplot2::annotation_custom(text_down_rot,
                                    ymin=ncol(rrho$pval)+vperc,
                                    ymax=ncol(rrho$pval)-3*vperc,
-                                   xmin=-vperc/4,xmax=-vperc/4) +
+                                   xmin=-vperc/4,xmax=-vperc/4)
 
     x.ind <- which(rrho$list1 < 0)
     if ( length(x.ind) > 0 )
@@ -470,28 +492,28 @@ plot.rrho <- function (rrho,
                                                        format = "e", digits = 1),
                                          colour = "gray"),
                                      hjust=1, vjust=1, colour = "black",
-                                     force = repel.force, show.legend = FALSE, size = base_size) +
+                                     force = repel.force, show.legend = FALSE, size = pval.size) +
             ggrepel::geom_text_repel(data=downdown,
                                      aes(x=row, y=col,
                                          label=formatC(padj,
                                                        format = "e", digits = 1),
                                          colour = "gray"),
                                      hjust=0, vjust=0, colour = "black",
-                                     force = repel.force, show.legend = FALSE, size = base_size) +
+                                     force = repel.force, show.legend = FALSE, size = pval.size) +
             ggrepel::geom_text_repel(data=updown,
                                      aes(x=row, y=col,
                                          label=formatC(padj,
                                                        format = "e", digits = 1),
                                          colour = "gray"),
                                      hjust=1, vjust=0, colour = "black",
-                                     force = repel.force, show.legend = FALSE, size = base_size) +
+                                     force = repel.force, show.legend = FALSE, size = pval.size) +
             ggrepel::geom_text_repel(data=downup,
                                      aes(x=row, y=col,
                                          label=formatC(padj,
                                                        format = "e", digits = 1),
                                          colour = "gray"),
                                      hjust=0, vjust=1, colour = "black",
-                                     force = repel.force, show.legend = FALSE, size = base_size) +
+                                     force = repel.force, show.legend = FALSE, size = pval.size) +
             ggplot2::geom_point(data=upup,
                                 aes(x=row, y=col)) +
             ggplot2::geom_point(data=downdown,
