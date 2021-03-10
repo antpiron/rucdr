@@ -376,11 +376,13 @@ plot.rrho <- function (rrho,
                        colors=my.colors,
                        labels=c("",""),
                        .log=log2, repel.force=150, p.val.visible=TRUE, base_size=20,
-                       max.p.val.number = NULL, show.legend = NA )
+                       max.p.val.number = NULL, show.legend = NA, max.log = NULL)
 {
     ## print(rrho$padj)
     signed.log.pval <- signed.lpval(rrho$padj, rrho$signs, .log)
-    max.log <- max(abs(signed.log.pval))
+    if (is.null(max.log)) {
+        max.log <- max(abs(signed.log.pval))
+        }
     min.log <- - max.log
 
     downup.size <- as.integer(base_size * 3/4)
